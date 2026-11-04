@@ -15,6 +15,7 @@ import EmployeeDetailsModal from './EmployeeDetailsModal';
 import EmployeeDetailPage from './EmployeeDetailPage';
 import EditEmployeePage from './EditEmployeePage';
 import DeleteEmployeeModal from './DeleteEmployeeModal';
+import DepartmentsPage from './DepartmentsPage';
 
 const matchEmployeeId = (path) => {
   const m = path ? path.match(/^\/employees\/(\d+)$/) : null;
@@ -57,6 +58,7 @@ const WelcomePage = ({
   const empDetailId = matchEmployeeId(currentPath);
   const empEditId = matchEmployeeEdit(currentPath);
   const isAddEmployee = currentPath === '/employees/new';
+  const isDepartmentsPage = currentPath === '/departments';
   const isEmployeeSection =
     currentPath === '/employees' ||
     isAddEmployee ||
@@ -586,6 +588,16 @@ const WelcomePage = ({
                 <ArrowLeft size={15} />
                 <span>Back to Employees</span>
               </button>
+            ) : isDepartmentsPage ? (
+              <button
+                type="button"
+                onClick={() => onNavigate('/dashboard')}
+                className="link-sub-home"
+                aria-label="Back to Dashboard"
+              >
+                <ArrowLeft size={15} />
+                <span>Back to Dashboard</span>
+              </button>
             ) : activeTab === 'employees' && currentPath !== '/dashboard' ? (
               <button
                 type="button"
@@ -637,7 +649,7 @@ const WelcomePage = ({
             <button
               type="button"
               onClick={() => handleTabChange('dashboard')}
-              className={`sidebar-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              className={`sidebar-nav-item ${activeTab === 'dashboard' && !isDepartmentsPage ? 'active' : ''}`}
               title="Dashboard"
             >
               <div className="sidebar-item-icon">
@@ -867,6 +879,15 @@ const WelcomePage = ({
                 </form>
               </div>
             </div>
+          ) : isDepartmentsPage ? (
+            <DepartmentsPage
+              employees={employees}
+              isLoading={isLoadingEmployees}
+              error={fetchError}
+              onRetry={fetchStaff}
+              onNavigate={onNavigate}
+              companyName={company?.companyName || company?.name}
+            />
           ) : activeTab === 'dashboard' ? (
             <>
               <div className="dashboard-content-header">
@@ -931,21 +952,17 @@ const WelcomePage = ({
 
                 <div
                   className="analytics-card interactive"
-                  onClick={() => {
-                    const el = document.getElementById('department-distribution-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
+                  onClick={() => onNavigate && onNavigate('/departments')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      const el = document.getElementById('department-distribution-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      if (onNavigate) onNavigate('/departments');
                     }
                   }}
                   tabIndex={0}
                   role="button"
-                  aria-label="Scroll to Department Distribution"
-                  title="Scroll to Department Distribution"
+                  aria-label="View All Departments"
+                  title="View All Departments"
                 >
                   <div className="analytics-card-header">
                     <span className="analytics-card-title">Total Departments</span>

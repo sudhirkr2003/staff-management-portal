@@ -67,9 +67,6 @@ const HomePage = ({ onNavigate, currentUser }) => {
         <div className="hero-content">
           <div className="hero-badge">Enterprise Management Solution</div>
           <h1 className="hero-heading">Staff Management Portal</h1>
-          <p className="hero-subtitle">
-            A smarter and more secure way to manage your organization's workforce.
-          </p>
 
           <div className="hero-cta-group">
             {currentUser ? (

@@ -43,6 +43,9 @@ const resolvePath = (target) => {
     case 'EMPLOYEES_NEW':
     case '/employees/new':
       return '/employees/new';
+    case 'DEPARTMENTS':
+    case '/departments':
+      return '/departments';
     case 'OTP_VERIFY':
     case '/verify-otp':
       return '/verify-otp';
@@ -73,6 +76,7 @@ const isProtectedPath = (path) => {
     path === '/dashboard' ||
     path === '/employees' ||
     path === '/employees/new' ||
+    path === '/departments' ||
     path === '/company' ||
     path === '/company/create'
   ) return true;
@@ -124,6 +128,7 @@ const App = () => {
             targetPath === '/dashboard' ||
             targetPath === '/employees' ||
             targetPath === '/employees/new' ||
+            targetPath === '/departments' ||
             targetPath === '/company' ||
             matchEmployeeId(targetPath) ||
             matchEmployeeEdit(targetPath)
@@ -477,6 +482,7 @@ const App = () => {
     currentPath === '/dashboard' ||
     currentPath === '/employees' ||
     currentPath === '/employees/new' ||
+    currentPath === '/departments' ||
     matchEmployeeId(currentPath) ||
     matchEmployeeEdit(currentPath)
   ) {
