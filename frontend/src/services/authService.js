@@ -100,3 +100,8 @@ export const getStoredUser = () => {
 export const getStoredToken = () => {
   return localStorage.getItem('auth_token');
 };
+
+export const verifyAdminPrivileges = async () => {
+  const response = await api.get('/api/admin/verify');
+  return response.data;
+};

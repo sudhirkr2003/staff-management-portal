@@ -8,6 +8,8 @@ public class EmployeeResponse {
 
     private Long id;
     private Long userId;
+    private Long companyId;
+    private String companyName;
     private String fullName;
     private String email;
     private String phone;
@@ -35,6 +37,22 @@ public class EmployeeResponse {
         this.updatedAt = updatedAt;
     }
 
+    public EmployeeResponse(Long id, Long userId, Long companyId, String companyName, String fullName, String email, String phone, String department, String designation, BigDecimal salary, LocalDate joiningDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.companyId = companyId;
+        this.companyName = companyName;
+        this.fullName = fullName;
+        this.email = email;
+        this.phone = phone;
+        this.department = department;
+        this.designation = designation;
+        this.salary = salary;
+        this.joiningDate = joiningDate;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() {
         return id;
     }
@@ -49,6 +67,22 @@ public class EmployeeResponse {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 
     public String getFullName() {

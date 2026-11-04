@@ -28,6 +28,10 @@ public class Employee {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
@@ -69,6 +73,18 @@ public class Employee {
         this.joiningDate = joiningDate;
     }
 
+    public Employee(User user, Company company, String fullName, String email, String phone, String department, String designation, BigDecimal salary, LocalDate joiningDate) {
+        this.user = user;
+        this.company = company;
+        this.fullName = fullName;
+        this.email = email;
+        this.phone = phone;
+        this.department = department;
+        this.designation = designation;
+        this.salary = salary;
+        this.joiningDate = joiningDate;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -94,6 +110,14 @@ public class Employee {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getFullName() {

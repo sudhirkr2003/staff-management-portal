@@ -1,16 +1,57 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { User, Mail, Shield, LogOut, Settings, CheckCircle2, AlertCircle, Loader2, X, Users, Lock } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import {
+  User, Mail, Settings, CheckCircle2, AlertCircle,
+  Loader2, X, Users, Lock, ArrowLeft,
+  UserPlus, Building2, Briefcase, Calendar, Phone,
+  LayoutDashboard, TrendingUp, Plus, ArrowRight, Menu, LogOut,
+  Search, Eye, IndianRupee
+} from 'lucide-react';
 import { updateProfile } from '../services/authService';
+import { createEmployee, getEmployees } from '../services/employeeService';
+import { getMyCompany } from '../services/companyService';
 import ChangePasswordModal from './ChangePasswordModal';
+import ManageCompanyModal from './ManageCompanyModal';
+import EmployeeDetailsModal from './EmployeeDetailsModal';
+
+const formatINR = (amount, decimals = 0) => {
+  const num = Number(amount) || 0;
+  return `₹${num.toLocaleString('en-IN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  })}`;
+};
 
 const WelcomePage = ({
   user,
+  company: initialCompany,
+  currentPath = '/dashboard',
+  onNavigate,
   onUserUpdate,
+  onCompanyUpdate,
   onSignOut,
+  onBackToHome,
   onForgotPassword,
   backendConnectionError,
   onRetryConnection
 }) => {
+  const [localTab, setLocalTab] = useState(currentPath === '/employees' ? 'employees' : 'dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState(null);
+
+  const activeTab = currentPath === '/employees' ? 'employees' : (currentPath === '/dashboard' ? 'dashboard' : localTab);
+
+  const handleTabChange = (tab) => {
+    setLocalTab(tab);
+    setIsMobileSidebarOpen(false);
+    if (onNavigate) {
+      onNavigate(tab === 'employees' ? '/employees' : '/dashboard');
+    }
+  };
+
+  const [company, setCompany] = useState(initialCompany || null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -19,6 +60,25 @@ const WelcomePage = ({
   const [profileSuccess, setProfileSuccess] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  const [employees, setEmployees] = useState([]);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+  const [fetchError, setFetchError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [employeeForm, setEmployeeForm] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    department: '',
+    designation: '',
+    salary: '',
+    joiningDate: ''
+  });
+  const [employeeFieldErrors, setEmployeeFieldErrors] = useState({});
+  const [employeeSuccess, setEmployeeSuccess] = useState('');
+  const [employeeError, setEmployeeError] = useState('');
+  const [isSubmittingEmployee, setIsSubmittingEmployee] = useState(false);
+
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -26,6 +86,18 @@ const WelcomePage = ({
       setFullNameInput(user.fullName);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!initialCompany) {
+      getMyCompany()
+        .then((res) => {
+          if (res && res.success && res.data) {
+            setCompany(res.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialCompany]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -37,6 +109,81 @@ const WelcomePage = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const fetchStaff = async () => {
+    setIsLoadingEmployees(true);
+    setFetchError('');
+    try {
+      const response = await getEmployees();
+      if (response && response.success && Array.isArray(response.data)) {
+        setEmployees(response.data);
+      }
+    } catch (err) {
+      setFetchError('Unable to load employee records. Please check your connection.');
+    } finally {
+      setIsLoadingEmployees(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const analytics = useMemo(() => {
+    const totalEmployees = employees.length;
+    const uniqueDepartments = new Set(
+      employees.map((emp) => emp.department?.trim()).filter(Boolean)
+    );
+    const totalDepartments = uniqueDepartments.size;
+    const totalPayroll = employees.reduce(
+      (sum, emp) => sum + (Number(emp.salary) || 0),
+      0
+    );
+    const averageSalary = totalEmployees > 0 ? totalPayroll / totalEmployees : 0;
+
+    const departmentDistribution = Object.entries(
+      employees.reduce((acc, emp) => {
+        const dept = emp.department?.trim() || 'Unassigned';
+        acc[dept] = (acc[dept] || 0) + 1;
+        return acc;
+      }, {})
+    )
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: totalEmployees > 0 ? Math.round((count / totalEmployees) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      totalEmployees,
+      totalDepartments,
+      totalPayroll,
+      averageSalary,
+      departmentDistribution
+    };
+  }, [employees]);
+
+  const filteredEmployees = useMemo(() => {
+    if (!searchQuery.trim()) return employees;
+    const query = searchQuery.toLowerCase();
+    return employees.filter(
+      (emp) =>
+        emp.fullName?.toLowerCase().includes(query) ||
+        emp.email?.toLowerCase().includes(query) ||
+        emp.department?.toLowerCase().includes(query) ||
+        emp.designation?.toLowerCase().includes(query) ||
+        emp.phone?.toLowerCase().includes(query)
+    );
+  }, [employees, searchQuery]);
+
+  const handleToggleSidebar = () => {
+    if (window.innerWidth <= 768) {
+      setIsMobileSidebarOpen((prev) => !prev);
+    } else {
+      setIsSidebarCollapsed((prev) => !prev);
+    }
+  };
+
   const handleOpenProfile = () => {
     setFullNameInput(user?.fullName || '');
     setProfileError('');
@@ -45,30 +192,42 @@ const WelcomePage = ({
     setIsProfileModalOpen(true);
   };
 
+  const handleOpenManageCompany = () => {
+    setIsDropdownOpen(false);
+    setIsCompanyModalOpen(true);
+  };
+
   const handleOpenChangePassword = () => {
     setIsProfileModalOpen(false);
     setIsChangePasswordModalOpen(true);
   };
 
+  const handleBackToProfileFromChangePassword = () => {
+    setIsChangePasswordModalOpen(false);
+    setIsProfileModalOpen(true);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+
     if (!fullNameInput.trim()) {
-      setProfileError('Full name is required');
-      return;
-    }
-    if (fullNameInput.trim().length < 2) {
-      setProfileError('Full name must be at least 2 characters');
+      setProfileError('Full name cannot be empty');
       return;
     }
 
     setIsSavingProfile(true);
-    setProfileError('');
-    setProfileSuccess('');
-
     try {
       const response = await updateProfile({ fullName: fullNameInput.trim() });
-      if (response.success && response.data) {
-        onUserUpdate(response.data);
+      if (response && response.success) {
+        onUserUpdate({ fullName: fullNameInput.trim() });
+        const stored = localStorage.getItem('auth_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.fullName = fullNameInput.trim();
+          localStorage.setItem('auth_user', JSON.stringify(parsed));
+        }
         setProfileSuccess('Profile updated successfully');
         setTimeout(() => {
           setIsProfileModalOpen(false);
@@ -86,6 +245,124 @@ const WelcomePage = ({
     }
   };
 
+  const handleOpenAddEmployee = () => {
+    setEmployeeError('');
+    setEmployeeSuccess('');
+    setEmployeeFieldErrors({});
+    setIsAddEmployeeModalOpen(true);
+  };
+
+  const handleEmployeeInputChange = (e) => {
+    const { name, value } = e.target;
+    setEmployeeForm((prev) => ({ ...prev, [name]: value }));
+    setEmployeeError('');
+    setEmployeeSuccess('');
+    if (employeeFieldErrors[name]) {
+      setEmployeeFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateEmployeeForm = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!employeeForm.fullName.trim()) {
+      errors.fullName = 'Full name is required';
+    } else if (employeeForm.fullName.trim().length < 2 || employeeForm.fullName.trim().length > 150) {
+      errors.fullName = 'Full name must be between 2 and 150 characters';
+    }
+
+    if (!employeeForm.email.trim()) {
+      errors.email = 'Email address is required';
+    } else if (!emailRegex.test(employeeForm.email.trim())) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!employeeForm.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (employeeForm.phone.trim().length < 5) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+
+    if (!employeeForm.department.trim()) {
+      errors.department = 'Department is required';
+    }
+
+    if (!employeeForm.designation.trim()) {
+      errors.designation = 'Designation is required';
+    }
+
+    if (!employeeForm.salary.toString().trim()) {
+      errors.salary = 'Salary is required';
+    } else {
+      const parsedSalary = parseFloat(employeeForm.salary);
+      if (isNaN(parsedSalary) || parsedSalary <= 0) {
+        errors.salary = 'Salary must be greater than zero';
+      }
+    }
+
+    if (!employeeForm.joiningDate) {
+      errors.joiningDate = 'Joining date is required';
+    }
+
+    setEmployeeFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleCreateEmployee = async (e) => {
+    e.preventDefault();
+    setEmployeeSuccess('');
+    setEmployeeError('');
+
+    if (!validateEmployeeForm()) {
+      return;
+    }
+
+    setIsSubmittingEmployee(true);
+    try {
+      const payload = {
+        fullName: employeeForm.fullName.trim(),
+        email: employeeForm.email.trim(),
+        phone: employeeForm.phone.trim(),
+        department: employeeForm.department.trim(),
+        designation: employeeForm.designation.trim(),
+        salary: parseFloat(employeeForm.salary),
+        joiningDate: employeeForm.joiningDate
+      };
+
+      const response = await createEmployee(payload);
+      if (response && response.success && response.data) {
+        setEmployeeSuccess('Employee created successfully');
+        setEmployees((prev) => [response.data, ...prev]);
+        setEmployeeForm({
+          fullName: '',
+          email: '',
+          phone: '',
+          department: '',
+          designation: '',
+          salary: '',
+          joiningDate: ''
+        });
+        setEmployeeFieldErrors({});
+        setTimeout(() => {
+          setIsAddEmployeeModalOpen(false);
+          setEmployeeSuccess('');
+        }, 1200);
+      }
+    } catch (err) {
+      if (err.response && err.response.data) {
+        if (err.response.data.data && typeof err.response.data.data === 'object') {
+          setEmployeeFieldErrors(err.response.data.data);
+        }
+        setEmployeeError(err.response.data.message || 'Failed to create employee');
+      } else {
+        setEmployeeError('Network error while creating employee. Please check your connection.');
+      }
+    } finally {
+      setIsSubmittingEmployee(false);
+    }
+  };
+
   const getInitials = (name) => {
     if (!name) return 'A';
     const parts = name.trim().split(' ');
@@ -96,52 +373,134 @@ const WelcomePage = ({
   };
 
   return (
-    <div className="welcome-container">
-      <header className="welcome-header">
-        <div className="welcome-brand">
-          <div className="brand-logo-icon">
-            <Users size={22} />
+    <div className="dashboard-layout-container full-viewport">
+      <header className="dashboard-top-header">
+        <div className="dashboard-top-header-inner">
+          <div className="dashboard-header-left">
+            <span className="dashboard-brand-title">Staff Management Portal</span>
           </div>
-          <span className="welcome-brand-text">Staff Management Portal</span>
-        </div>
 
-        <div className="profile-menu-wrapper" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className="profile-btn"
-          >
-            <div className="user-avatar">{getInitials(user?.fullName)}</div>
-            <span className="user-display-name">{user?.fullName || 'Administrator'}</span>
-          </button>
+          <div className="dashboard-user-area" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="dashboard-profile-trigger"
+              aria-expanded={isDropdownOpen}
+            >
+              <div className="dashboard-avatar">{getInitials(user?.fullName)}</div>
+              <span className="dashboard-user-name">{user?.fullName || 'User'}</span>
+            </button>
 
-          {isDropdownOpen && (
-            <div className="profile-dropdown">
-              <div className="dropdown-user-header">
-                <p className="dropdown-user-name">{user?.fullName}</p>
-                <p className="dropdown-user-email">{user?.email}</p>
+            {isDropdownOpen && (
+              <div className="dashboard-dropdown">
+                <div className="dropdown-user-summary">
+                  <div className="dropdown-avatar">{getInitials(user?.fullName)}</div>
+                  <div className="dropdown-user-details">
+                    <div className="dropdown-name">{user?.fullName}</div>
+                    <div className="dropdown-email">{user?.email}</div>
+                    <span className={`badge-role ${user?.role === 'ADMIN' ? 'admin' : 'user'} dropdown-role`}>
+                      {user?.role || 'USER'}
+                    </span>
+                  </div>
+                </div>
+                <div className="dropdown-divider" />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    handleOpenAddEmployee();
+                  }}
+                  className="dropdown-action-btn"
+                >
+                  <UserPlus size={16} />
+                  <span>Add Employee</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    handleTabChange('employees');
+                  }}
+                  className="dropdown-action-btn"
+                >
+                  <Users size={16} />
+                  <span>Manage Employees</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenManageCompany}
+                  className="dropdown-action-btn"
+                >
+                  <Building2 size={16} />
+                  <span>Manage Company</span>
+                </button>
+
+                <div className="dropdown-divider" />
+
+                <button
+                  type="button"
+                  onClick={handleOpenProfile}
+                  className="dropdown-action-btn"
+                >
+                  <Settings size={16} />
+                  <span>Manage Profile</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setIsChangePasswordModalOpen(true);
+                  }}
+                  className="dropdown-action-btn"
+                >
+                  <Lock size={16} />
+                  <span>Change Password</span>
+                </button>
+
+                <div className="dropdown-divider" />
+
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  className="dropdown-action-btn btn-signout"
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
               </div>
-              <div className="dropdown-divider"></div>
-              <button
-                type="button"
-                onClick={handleOpenProfile}
-                className="dropdown-item"
-              >
-                <Settings size={16} />
-                <span>Manage Profile</span>
-              </button>
-              <button
-                type="button"
-                onClick={onSignOut}
-                className="dropdown-item text-danger"
-              >
-                <LogOut size={16} />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
+
+      <div className="dashboard-sub-header">
+        <div className="dashboard-sub-header-inner">
+          <div className="sub-header-left">
+            <button
+              type="button"
+              onClick={handleToggleSidebar}
+              className="btn-sub-hamburger"
+              aria-label="Toggle navigation menu"
+              title="Toggle sidebar"
+            >
+              <Menu size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={onBackToHome}
+              className="link-sub-home"
+              aria-label="Back to Home"
+            >
+              <ArrowLeft size={15} />
+              <span>Home</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {backendConnectionError && (
         <div className="connection-banner">
@@ -159,24 +518,641 @@ const WelcomePage = ({
         </div>
       )}
 
-      <main className="welcome-main">
-        <div className="welcome-card">
-          <div className="welcome-hero-badge">Administrator Session</div>
-          <h1 className="welcome-title">Welcome to Staff Management Portal</h1>
-          <p className="welcome-message">
-            You have successfully signed in to your account.
-          </p>
+      <div className="dashboard-layout-body">
+        <aside
+          className={`dashboard-sidebar ${isSidebarCollapsed ? 'collapsed' : ''} ${
+            isMobileSidebarOpen ? 'mobile-open' : ''
+          }`}
+        >
+          <nav className="sidebar-nav">
+            <button
+              type="button"
+              onClick={() => handleTabChange('dashboard')}
+              className={`sidebar-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              title="Dashboard"
+            >
+              <div className="sidebar-item-icon">
+                <LayoutDashboard size={18} />
+              </div>
+              <span className="sidebar-item-text">Dashboard</span>
+            </button>
 
-          <div className="welcome-profile-preview">
-            <div className="preview-avatar">{getInitials(user?.fullName)}</div>
-            <div className="preview-info">
-              <h3 className="preview-name">{user?.fullName}</h3>
-              <p className="preview-email">{user?.email}</p>
-              <span className="preview-role">{user?.role || 'ADMIN'}</span>
+            <button
+              type="button"
+              onClick={() => handleTabChange('employees')}
+              className={`sidebar-nav-item ${activeTab === 'employees' ? 'active' : ''}`}
+              title="Manage Employees"
+            >
+              <div className="sidebar-item-icon">
+                <Users size={18} />
+              </div>
+              <span className="sidebar-item-text">Manage Employees</span>
+            </button>
+          </nav>
+        </aside>
+
+        {isMobileSidebarOpen && (
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+
+        <main className={`dashboard-main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
+          {activeTab === 'dashboard' ? (
+            <>
+              <div className="dashboard-content-header">
+                <h1 className="content-title">
+                  {company?.companyName || company?.name
+                    ? `${company.companyName || company.name} Staff Dashboard`
+                    : 'Staff Dashboard'}
+                </h1>
+                <button
+                  type="button"
+                  onClick={handleOpenAddEmployee}
+                  className="btn-new-employee"
+                >
+                  <Plus size={16} />
+                  <span>New Employee</span>
+                </button>
+              </div>
+
+              {fetchError && (
+                <div className="alert alert-error compact-alert">
+                  <AlertCircle size={16} />
+                  <span>{fetchError}</span>
+                  <button
+                    type="button"
+                    onClick={fetchStaff}
+                    className="btn-alert-retry"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              <div className="analytics-grid">
+                <div
+                  className="analytics-card interactive"
+                  onClick={() => handleTabChange('employees')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleTabChange('employees');
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="View Manage Employees page"
+                  title="View all employees"
+                >
+                  <div className="analytics-card-header">
+                    <span className="analytics-card-title">Total Employees</span>
+                    <div className="analytics-icon blue">
+                      <Users size={18} />
+                    </div>
+                  </div>
+                  <div className="analytics-value">
+                    {isLoadingEmployees ? (
+                      <Loader2 size={22} className="spinner" />
+                    ) : (
+                      analytics.totalEmployees
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className="analytics-card interactive"
+                  onClick={() => {
+                    const el = document.getElementById('department-distribution-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const el = document.getElementById('department-distribution-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Scroll to Department Distribution"
+                  title="Scroll to Department Distribution"
+                >
+                  <div className="analytics-card-header">
+                    <span className="analytics-card-title">Total Departments</span>
+                    <div className="analytics-icon emerald">
+                      <Building2 size={18} />
+                    </div>
+                  </div>
+                  <div className="analytics-value">
+                    {isLoadingEmployees ? (
+                      <Loader2 size={22} className="spinner" />
+                    ) : (
+                      analytics.totalDepartments
+                    )}
+                  </div>
+                </div>
+
+                <div className="analytics-card">
+                  <div className="analytics-card-header">
+                    <span className="analytics-card-title">Average Salary</span>
+                    <div className="analytics-icon purple">
+                      <IndianRupee size={18} />
+                    </div>
+                  </div>
+                  <div className="analytics-value">
+                    {isLoadingEmployees ? (
+                      <Loader2 size={22} className="spinner" />
+                    ) : (
+                      formatINR(analytics.averageSalary, 0)
+                    )}
+                  </div>
+                </div>
+
+                <div className="analytics-card">
+                  <div className="analytics-card-header">
+                    <span className="analytics-card-title">Total Annual Payroll</span>
+                    <div className="analytics-icon amber">
+                      <TrendingUp size={18} />
+                    </div>
+                  </div>
+                  <div className="analytics-value">
+                    {isLoadingEmployees ? (
+                      <Loader2 size={22} className="spinner" />
+                    ) : (
+                      formatINR(analytics.totalPayroll, 0)
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="dashboard-middle-section">
+                <div className="analytics-chart-card" id="department-distribution-section">
+                  <div className="chart-card-header">
+                    <h3 className="chart-card-title">Department Distribution</h3>
+                  </div>
+
+                  {isLoadingEmployees ? (
+                    <div className="table-loading-state">
+                      <Loader2 size={18} className="spinner" />
+                      <span>Loading department data...</span>
+                    </div>
+                  ) : analytics.departmentDistribution.length === 0 ? (
+                    <p className="analytics-subtext">No department data recorded yet.</p>
+                  ) : (
+                    <div className="dept-distribution-list">
+                      {analytics.departmentDistribution.map((dept) => (
+                        <div key={dept.name} className="dept-dist-item">
+                          <div className="dept-dist-header">
+                            <span className="dept-dist-name">{dept.name}</span>
+                            <span className="dept-dist-meta">
+                              {dept.count} {dept.count === 1 ? 'employee' : 'employees'} ({dept.percentage}%)
+                            </span>
+                          </div>
+                          <div className="dept-dist-bar-track">
+                            <div
+                              className="dept-dist-bar-fill"
+                              style={{ width: `${dept.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="quick-actions-card">
+                  <div className="chart-card-header">
+                    <h3 className="chart-card-title">Quick Actions</h3>
+                  </div>
+                  <div className="quick-actions-grid">
+                    <div className="quick-action-tile" onClick={handleOpenAddEmployee}>
+                      <div className="quick-action-icon blue">
+                        <UserPlus size={20} />
+                      </div>
+                      <div className="quick-action-content">
+                        <div className="quick-action-title">Add New Employee</div>
+                        <div className="quick-action-desc">
+                          Register a new employee into your company workspace.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenAddEmployee();
+                        }}
+                        className="quick-action-btn"
+                      >
+                        <span>Add Employee</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+
+                    <div className="quick-action-tile" onClick={() => handleTabChange('employees')}>
+                      <div className="quick-action-icon emerald">
+                        <Users size={20} />
+                      </div>
+                      <div className="quick-action-content">
+                        <div className="quick-action-title">View All Employees</div>
+                        <div className="quick-action-desc">
+                          Access and search the workforce directory and employee profiles.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTabChange('employees');
+                        }}
+                        className="quick-action-btn"
+                      >
+                        <span>View All{employees.length > 0 ? ` (${employees.length})` : ''}</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="manage-employees-view">
+              <div className="dashboard-content-header manage-employees-header">
+                <div className="content-title-wrapper">
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('dashboard')}
+                    className="link-back-dashboard"
+                    aria-label="Back to Dashboard"
+                  >
+                    <ArrowLeft size={15} />
+                    <span>Back to Dashboard</span>
+                  </button>
+                  <h1 className="content-title">Manage Employees</h1>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenAddEmployee}
+                  className="btn-new-employee"
+                >
+                  <Plus size={16} />
+                  <span>New Employee</span>
+                </button>
+              </div>
+
+              <div className="directory-control-bar">
+                <div className="directory-search-wrapper">
+                  <Search size={16} className="directory-search-icon" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name, email, department, designation..."
+                    className="directory-search-input"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="btn-clear-search"
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="directory-summary-stat">
+                  Showing {filteredEmployees.length} of {employees.length} records
+                </div>
+              </div>
+
+              {fetchError && (
+                <div className="alert alert-error compact-alert">
+                  <AlertCircle size={16} />
+                  <span>{fetchError}</span>
+                  <button
+                    type="button"
+                    onClick={fetchStaff}
+                    className="btn-alert-retry"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {isLoadingEmployees ? (
+                <div className="table-loading-state">
+                  <Loader2 size={18} className="spinner" />
+                  <span>Loading workforce records...</span>
+                </div>
+              ) : filteredEmployees.length === 0 ? (
+                <div className="table-empty-notice">
+                  <Users size={32} className="empty-state-icon" />
+                  <div className="empty-state-title">
+                    {searchQuery ? 'No matching employees found' : 'No employees registered yet'}
+                  </div>
+                  <div className="empty-state-desc">
+                    {searchQuery
+                      ? 'Try adjusting your search criteria.'
+                      : 'Add your first employee to populate your directory.'}
+                  </div>
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="btn-sub-home"
+                      style={{ marginTop: '0.75rem' }}
+                    >
+                      Clear Search
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleOpenAddEmployee}
+                      className="btn-new-employee"
+                      style={{ marginTop: '0.75rem' }}
+                    >
+                      <Plus size={15} />
+                      <span>New Employee</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="saas-table-wrapper">
+                  <table className="saas-table">
+                    <thead>
+                      <tr>
+                        <th>Full Name</th>
+                        <th>Email Address</th>
+                        <th>Phone</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Salary</th>
+                        <th>Joining Date</th>
+                        <th style={{ textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredEmployees.map((emp) => (
+                        <tr key={emp.id}>
+                          <td className="emp-name">{emp.fullName}</td>
+                          <td className="emp-email">{emp.email}</td>
+                          <td>{emp.phone}</td>
+                          <td><span className="dept-tag">{emp.department}</span></td>
+                          <td>{emp.designation}</td>
+                          <td className="salary-cell">
+                            {formatINR(emp.salary, 2)}
+                          </td>
+                          <td>{emp.joiningDate}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedEmployeeForDetails(emp)}
+                              className="btn-table-action-details"
+                              title="View Details"
+                            >
+                              <Eye size={14} />
+                              <span>View Details</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
+          )}
+        </main>
+      </div>
+
+      {selectedEmployeeForDetails && (
+        <EmployeeDetailsModal
+          employee={selectedEmployeeForDetails}
+          onClose={() => setSelectedEmployeeForDetails(null)}
+        />
+      )}
+
+      {isCompanyModalOpen && (
+        <ManageCompanyModal
+          company={company}
+          currentUser={user}
+          onClose={() => setIsCompanyModalOpen(false)}
+          onCompanyUpdated={(updatedCompany) => {
+            setCompany(updatedCompany);
+            if (onCompanyUpdate) {
+              onCompanyUpdate(updatedCompany);
+            }
+          }}
+        />
+      )}
+
+      {isAddEmployeeModalOpen && (
+        <div className="employee-modal-overlay">
+          <div className="employee-modal-card">
+            <div className="employee-modal-header">
+              <div className="employee-modal-title-group">
+                <h2 className="employee-modal-title">Add New Employee</h2>
+                <p className="employee-modal-subtitle">Enter employee information to register them</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddEmployeeModalOpen(false)}
+                className="btn-modal-close"
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+
+            {employeeSuccess && (
+              <div className="alert alert-success compact-alert">
+                <CheckCircle2 size={16} />
+                <span>{employeeSuccess}</span>
+              </div>
+            )}
+
+            {employeeError && (
+              <div className="alert alert-error compact-alert">
+                <AlertCircle size={16} />
+                <span>{employeeError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateEmployee} className="employee-modal-form" noValidate>
+              <div className="employee-form-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-fullName">Full Name</label>
+                  <div className="input-wrapper">
+                    <User size={16} className="input-icon" />
+                    <input
+                      type="text"
+                      id="emp-fullName"
+                      name="fullName"
+                      value={employeeForm.fullName}
+                      onChange={handleEmployeeInputChange}
+                      placeholder="e.g. John Doe"
+                      className={`form-input ${employeeFieldErrors.fullName ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.fullName && (
+                    <span className="field-error-text">{employeeFieldErrors.fullName}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-email">Email Address</label>
+                  <div className="input-wrapper">
+                    <Mail size={16} className="input-icon" />
+                    <input
+                      type="email"
+                      id="emp-email"
+                      name="email"
+                      value={employeeForm.email}
+                      onChange={handleEmployeeInputChange}
+                      placeholder="e.g. john.doe@example.com"
+                      className={`form-input ${employeeFieldErrors.email ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.email && (
+                    <span className="field-error-text">{employeeFieldErrors.email}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="employee-form-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-phone">Phone Number</label>
+                  <div className="input-wrapper">
+                    <Phone size={16} className="input-icon" />
+                    <input
+                      type="tel"
+                      id="emp-phone"
+                      name="phone"
+                      value={employeeForm.phone}
+                      onChange={handleEmployeeInputChange}
+                      placeholder="e.g. +91 9876543210"
+                      className={`form-input ${employeeFieldErrors.phone ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.phone && (
+                    <span className="field-error-text">{employeeFieldErrors.phone}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-department">Department</label>
+                  <div className="input-wrapper">
+                    <Building2 size={16} className="input-icon" />
+                    <input
+                      type="text"
+                      id="emp-department"
+                      name="department"
+                      value={employeeForm.department}
+                      onChange={handleEmployeeInputChange}
+                      placeholder="e.g. Engineering"
+                      className={`form-input ${employeeFieldErrors.department ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.department && (
+                    <span className="field-error-text">{employeeFieldErrors.department}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="employee-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-designation">Designation</label>
+                  <div className="input-wrapper">
+                    <Briefcase size={16} className="input-icon" />
+                    <input
+                      type="text"
+                      id="emp-designation"
+                      name="designation"
+                      value={employeeForm.designation}
+                      onChange={handleEmployeeInputChange}
+                      placeholder="e.g. Software Engineer"
+                      className={`form-input ${employeeFieldErrors.designation ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.designation && (
+                    <span className="field-error-text">{employeeFieldErrors.designation}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-salary">Salary (₹)</label>
+                  <div className="input-wrapper">
+                    <IndianRupee size={16} className="input-icon" />
+                    <input
+                      type="number"
+                      id="emp-salary"
+                      name="salary"
+                      step="0.01"
+                      min="0.01"
+                      value={employeeForm.salary}
+                      onChange={handleEmployeeInputChange}
+                      placeholder="e.g. 75000"
+                      className={`form-input ${employeeFieldErrors.salary ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.salary && (
+                    <span className="field-error-text">{employeeFieldErrors.salary}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emp-joiningDate">Joining Date</label>
+                  <div className="input-wrapper">
+                    <Calendar size={16} className="input-icon" />
+                    <input
+                      type="date"
+                      id="emp-joiningDate"
+                      name="joiningDate"
+                      value={employeeForm.joiningDate}
+                      onChange={handleEmployeeInputChange}
+                      className={`form-input ${employeeFieldErrors.joiningDate ? 'input-error' : ''}`}
+                    />
+                  </div>
+                  {employeeFieldErrors.joiningDate && (
+                    <span className="field-error-text">{employeeFieldErrors.joiningDate}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="employee-modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setIsAddEmployeeModalOpen(false)}
+                  className="btn-profile-cancel"
+                  disabled={isSubmittingEmployee}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingEmployee}
+                  className="btn-profile-save"
+                >
+                  {isSubmittingEmployee ? (
+                    <>
+                      <Loader2 size={16} className="spinner" />
+                      <span>Saving Employee...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={16} />
+                      <span>Save Employee</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </main>
+      )}
 
       {isProfileModalOpen && (
         <div className="modal-backdrop">
@@ -240,25 +1216,21 @@ const WelcomePage = ({
                     type="text"
                     id="edit-fullname"
                     value={fullNameInput}
-                    onChange={(e) => {
-                      setFullNameInput(e.target.value);
-                      setProfileError('');
-                    }}
-                    disabled={isSavingProfile}
+                    onChange={(e) => setFullNameInput(e.target.value)}
+                    placeholder="Enter full name"
                     className="form-input compact-input"
-                    placeholder="Enter Your Name"
                   />
                 </div>
               </div>
 
               <div className="profile-security-card">
-                <div className="security-card-main">
-                  <div className="security-card-icon-badge">
-                    <Shield size={18} />
+                <div className="security-card-left">
+                  <div className="security-icon-badge">
+                    <Lock size={18} />
                   </div>
-                  <div className="security-card-text">
-                    <span className="security-card-title">Password &amp; Security</span>
-                    <span className="security-card-desc">Manage your account password and security.</span>
+                  <div>
+                    <h4 className="security-card-title">Password &amp; Security</h4>
+                    <p className="security-card-desc">Manage your account password and security.</p>
                   </div>
                 </div>
                 <button
@@ -266,8 +1238,7 @@ const WelcomePage = ({
                   onClick={handleOpenChangePassword}
                   className="btn-profile-change-pass"
                 >
-                  <Lock size={14} />
-                  <span>Change Password</span>
+                  Change Password
                 </button>
               </div>
 
@@ -275,8 +1246,8 @@ const WelcomePage = ({
                 <button
                   type="button"
                   onClick={() => setIsProfileModalOpen(false)}
-                  disabled={isSavingProfile}
                   className="btn-profile-cancel"
+                  disabled={isSavingProfile}
                 >
                   Cancel
                 </button>
@@ -287,11 +1258,11 @@ const WelcomePage = ({
                 >
                   {isSavingProfile ? (
                     <>
-                      <Loader2 size={16} className="spinner" />
+                      <Loader2 size={15} className="spinner" />
                       <span>Saving...</span>
                     </>
                   ) : (
-                    <span>Save Changes</span>
+                    'Save Changes'
                   )}
                 </button>
               </div>
@@ -302,16 +1273,9 @@ const WelcomePage = ({
 
       {isChangePasswordModalOpen && (
         <ChangePasswordModal
-          user={user}
           onClose={() => setIsChangePasswordModalOpen(false)}
-          onBackToProfile={() => {
-            setIsChangePasswordModalOpen(false);
-            setIsProfileModalOpen(true);
-          }}
-          onForgotPassword={(email) => {
-            setIsChangePasswordModalOpen(false);
-            onForgotPassword(email);
-          }}
+          onBackToProfile={handleBackToProfileFromChangePassword}
+          onForgotPassword={onForgotPassword}
         />
       )}
     </div>

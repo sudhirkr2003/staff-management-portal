@@ -6,6 +6,8 @@ public class UserProfileResponse {
     private String fullName;
     private String email;
     private String role;
+    private Boolean hasCompany = false;
+    private String companyName;
 
     public UserProfileResponse() {
     }
@@ -15,6 +17,17 @@ public class UserProfileResponse {
         this.fullName = fullName;
         this.email = email;
         this.role = role;
+        this.hasCompany = false;
+        this.companyName = null;
+    }
+
+    public UserProfileResponse(Long id, String fullName, String email, String role, Boolean hasCompany, String companyName) {
+        this.id = id;
+        this.fullName = fullName;
+        this.email = email;
+        this.role = role;
+        this.hasCompany = hasCompany != null && hasCompany;
+        this.companyName = companyName;
     }
 
     public Long getId() {
@@ -47,5 +60,21 @@ public class UserProfileResponse {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Boolean getHasCompany() {
+        return hasCompany;
+    }
+
+    public void setHasCompany(Boolean hasCompany) {
+        this.hasCompany = hasCompany != null && hasCompany;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 }
