@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Briefcase, Mail, Phone, Globe, Loader2, AlertCircle, CheckCircle2, Users, LogOut } from 'lucide-react';
+import { Building2, Briefcase, Mail, Phone, Globe, Loader2, AlertCircle, CheckCircle2, LogOut } from 'lucide-react';
 import { createCompany } from '../services/companyService';
 
 const CreateCompanyPage = ({ onCompanyCreated, onSignOut }) => {
@@ -83,9 +83,11 @@ const CreateCompanyPage = ({ onCompanyCreated, onSignOut }) => {
     <div className="onboarding-page-container">
       <header className="onboarding-header">
         <div className="onboarding-brand">
-          <div className="dashboard-brand-icon">
-            <Users size={20} />
-          </div>
+          <img
+            src="/staff-management-mark.png"
+            alt="Staff Management Portal"
+            className="dashboard-brand-logo"
+          />
           <span className="dashboard-brand-title">Staff Management Portal</span>
         </div>
         <button
@@ -107,7 +109,7 @@ const CreateCompanyPage = ({ onCompanyCreated, onSignOut }) => {
             </div>
             <h1 className="onboarding-title">Create Your Company</h1>
             <p className="onboarding-subtitle">
-              Every Administrator must set up a company workspace before adding or managing employees.
+              Add company workspace before adding or managing employees.
             </p>
           </div>
 

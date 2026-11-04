@@ -448,7 +448,7 @@ const LoginPage = ({
             type="button"
             onClick={handleGoogleClick}
             disabled={isSubmitting || isRetrying}
-            className="btn-google compact-btn"
+            className="btn-google"
           >
             <svg className="google-icon" width="18" height="18" viewBox="0 0 24 24">
               <path

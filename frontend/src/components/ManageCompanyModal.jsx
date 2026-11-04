@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { updateCompany } from '../services/companyService';
+import { updateCompany, getMyCompany } from '../services/companyService';
 
 const ManageCompanyModal = ({ company: initialCompany, onClose, onCompanyUpdated, currentUser }) => {
   const [company, setCompany] = useState(initialCompany);
+  const [isLoading, setIsLoading] = useState(!initialCompany);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    companyName: '',
-    industry: '',
-    businessEmail: '',
-    contactPhone: '',
-    website: ''
+    companyName: initialCompany?.companyName || initialCompany?.name || '',
+    industry: initialCompany?.industry || '',
+    businessEmail: initialCompany?.businessEmail || '',
+    contactPhone: initialCompany?.contactPhone || '',
+    website: initialCompany?.website || ''
   });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -28,6 +29,58 @@ const ManageCompanyModal = ({ company: initialCompany, onClose, onCompanyUpdated
       });
     }
   }, [initialCompany]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getMyCompany()
+      .then((res) => {
+        if (isMounted && res && res.success && res.data) {
+          setCompany(res.data);
+          setFormData({
+            companyName: res.data.companyName || res.data.name || '',
+            industry: res.data.industry || '',
+            businessEmail: res.data.businessEmail || '',
+            contactPhone: res.data.contactPhone || '',
+            website: res.data.website || ''
+          });
+          if (onCompanyUpdated) {
+            onCompanyUpdated(res.data);
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [onCompanyUpdated]);
+
+  if (isLoading && !company) {
+    return (
+      <div className="employee-modal-overlay">
+        <div className="company-clean-modal-card">
+          <div className="company-clean-modal-header">
+            <h2 className="company-modal-heading">Company Information</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-modal-close"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+          <div className="company-clean-modal-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '160px' }}>
+            <Loader2 size={24} className="spinner" style={{ color: 'var(--primary-color)' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!company) return null;
 
@@ -281,7 +334,7 @@ const ManageCompanyModal = ({ company: initialCompany, onClose, onCompanyUpdated
                 <div className="company-clean-row">
                   <span className="company-row-label">Account Owner:</span>
                   <span className="company-row-value">
-                    {company.ownerName || currentUser?.fullName || 'Sudhir Kumar'}
+                    {company.ownerName || currentUser?.fullName || 'Administrator'}
                   </span>
                 </div>
               </div>

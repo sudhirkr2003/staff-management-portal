@@ -4,6 +4,7 @@ import com.synchronoss.staffportal.config.UserPrincipal;
 import com.synchronoss.staffportal.dto.ApiResponse;
 import com.synchronoss.staffportal.dto.CompanyRequest;
 import com.synchronoss.staffportal.dto.CompanyResponse;
+import org.springframework.security.access.AccessDeniedException;
 import com.synchronoss.staffportal.exception.InvalidCredentialsException;
 import com.synchronoss.staffportal.service.CompanyService;
 import jakarta.validation.Valid;
@@ -32,7 +33,7 @@ public class CompanyController {
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CompanyRequest request
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         CompanyResponse response = companyService.createCompany(request, principal.getId(), principal.getRole());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Company created successfully", response));
     }
@@ -41,7 +42,7 @@ public class CompanyController {
     public ResponseEntity<ApiResponse<CompanyResponse>> getMyCompany(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         CompanyResponse response = companyService.getMyCompany(principal.getId());
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Company retrieved successfully", response));
     }
@@ -51,7 +52,7 @@ public class CompanyController {
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CompanyRequest request
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         CompanyResponse response = companyService.updateMyCompany(request, principal.getId(), principal.getRole());
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Company updated successfully", response));
     }
@@ -59,6 +60,13 @@ public class CompanyController {
     private void validatePrincipal(UserPrincipal principal) {
         if (principal == null) {
             throw new InvalidCredentialsException("Unauthorized: Authentication token is missing or invalid");
+        }
+    }
+
+    private void validateAdmin(UserPrincipal principal) {
+        validatePrincipal(principal);
+        if (principal.getRole() == null || !"ADMIN".equalsIgnoreCase(principal.getRole())) {
+            throw new AccessDeniedException("Access denied: Only administrators can access company management");
         }
     }
 }

@@ -73,13 +73,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Optional<User> userByEmail = userRepository.findByEmail(normalizedEmail);
         if (userByEmail.isPresent()) {
             User existingUser = userByEmail.get();
+            boolean needsSave = false;
+            if (existingUser.getRole() == null || !"ADMIN".equalsIgnoreCase(existingUser.getRole())) {
+                existingUser.setRole("ADMIN");
+                needsSave = true;
+            }
             if (existingUser.getGoogleId() == null || !existingUser.getGoogleId().equals(googleId)) {
                 existingUser.setGoogleId(googleId);
                 existingUser.setAuthProvider("BOTH");
                 existingUser.setEmailVerified(true);
+                needsSave = true;
+            }
+            if (needsSave) {
                 userRepository.save(existingUser);
             }
-            String token = jwtUtil.generateToken(existingUser.getId(), existingUser.getEmail(), existingUser.getRole());
+            String token = jwtUtil.generateToken(existingUser.getId(), existingUser.getEmail(), "ADMIN");
             String targetUrl = UriComponentsBuilder.fromUriString(redirectBaseUrl)
                     .queryParam("status", "login_success")
                     .queryParam("token", token)
@@ -92,7 +100,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Optional<User> userByGoogleId = userRepository.findByGoogleId(googleId);
         if (userByGoogleId.isPresent()) {
             User existingUser = userByGoogleId.get();
-            String token = jwtUtil.generateToken(existingUser.getId(), existingUser.getEmail(), existingUser.getRole());
+            if (existingUser.getRole() == null || !"ADMIN".equalsIgnoreCase(existingUser.getRole())) {
+                existingUser.setRole("ADMIN");
+                userRepository.save(existingUser);
+            }
+            String token = jwtUtil.generateToken(existingUser.getId(), existingUser.getEmail(), "ADMIN");
             String targetUrl = UriComponentsBuilder.fromUriString(redirectBaseUrl)
                     .queryParam("status", "login_success")
                     .queryParam("token", token)

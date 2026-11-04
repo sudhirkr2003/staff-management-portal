@@ -84,10 +84,10 @@ class OAuth2AuthenticationSuccessHandlerTest {
         when(oAuth2User.getAttribute("email_verified")).thenReturn(true);
         when(oAuth2User.getAttribute("name")).thenReturn("Regular User");
 
-        User existingUser = new User("Regular User", "user@example.com", "hash", "USER");
+        User existingUser = new User("Regular User", "user@example.com", "hash", "ADMIN");
         existingUser.setId(2L);
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existingUser));
-        when(jwtUtil.generateToken(2L, "user@example.com", "USER")).thenReturn("userJwtToken");
+        when(jwtUtil.generateToken(2L, "user@example.com", "ADMIN")).thenReturn("userJwtToken");
 
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
@@ -97,7 +97,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
         org.junit.jupiter.api.Assertions.assertEquals("google-sub-789", existingUser.getGoogleId());
         org.junit.jupiter.api.Assertions.assertEquals("BOTH", existingUser.getAuthProvider());
         org.junit.jupiter.api.Assertions.assertEquals(true, existingUser.getEmailVerified());
-        org.junit.jupiter.api.Assertions.assertEquals("USER", existingUser.getRole());
+        org.junit.jupiter.api.Assertions.assertEquals("ADMIN", existingUser.getRole());
     }
 
     @Test
@@ -108,10 +108,10 @@ class OAuth2AuthenticationSuccessHandlerTest {
         when(oAuth2User.getAttribute("email_verified")).thenReturn(true);
         when(oAuth2User.getAttribute("name")).thenReturn("Google User");
 
-        User existingUser = new User("Google User", "user@gmail.com", "hash", "USER", "google-sub-123", "BOTH", true);
+        User existingUser = new User("Google User", "user@gmail.com", "hash", "ADMIN", "google-sub-123", "BOTH", true);
         existingUser.setId(10L);
         when(userRepository.findByEmail("user@gmail.com")).thenReturn(Optional.of(existingUser));
-        when(jwtUtil.generateToken(10L, "user@gmail.com", "USER")).thenReturn("jwtToken123");
+        when(jwtUtil.generateToken(10L, "user@gmail.com", "ADMIN")).thenReturn("jwtToken123");
 
         successHandler.onAuthenticationSuccess(request, response, authentication);
 

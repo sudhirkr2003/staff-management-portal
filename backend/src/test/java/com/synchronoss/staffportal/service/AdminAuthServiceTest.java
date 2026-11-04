@@ -347,7 +347,7 @@ class AdminAuthServiceTest {
     }
 
     @Test
-    void completeGoogleRegistration_Success_CreatesUserRoleAccount() {
+    void completeGoogleRegistration_Success_CreatesAdminRoleAccount() {
         GoogleRegistrationRequest request = new GoogleRegistrationRequest("validToken", "Password@123", "Password@123");
         io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
         when(claims.getSubject()).thenReturn("user@gmail.com");
@@ -364,19 +364,19 @@ class AdminAuthServiceTest {
             user.setId(2L);
             return user;
         });
-        when(jwtUtil.generateToken(2L, "user@gmail.com", "USER")).thenReturn("jwtTokenUser");
+        when(jwtUtil.generateToken(2L, "user@gmail.com", "ADMIN")).thenReturn("jwtTokenUser");
 
         LoginResponse response = adminAuthService.completeGoogleRegistration(request);
 
         assertNotNull(response);
         assertEquals("jwtTokenUser", response.getToken());
-        assertEquals("USER", response.getRole());
+        assertEquals("ADMIN", response.getRole());
         assertEquals("user@gmail.com", response.getEmail());
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         User saved = captor.getValue();
-        assertEquals("USER", saved.getRole());
+        assertEquals("ADMIN", saved.getRole());
         assertEquals("BOTH", saved.getAuthProvider());
         assertEquals(true, saved.getEmailVerified());
         assertEquals("google-sub-123", saved.getGoogleId());
@@ -484,7 +484,7 @@ class AdminAuthServiceTest {
     @Test
     void sendPasswordResetOtp_RegisteredEmail_SendsOtp() {
         ForgotPasswordRequest request = new ForgotPasswordRequest("user@example.com");
-        User user = new User("Jane Doe", "user@example.com", "hash", "USER");
+        User user = new User("Jane Doe", "user@example.com", "hash", "ADMIN");
 
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(passwordResetOtpRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
@@ -542,7 +542,7 @@ class AdminAuthServiceTest {
         when(claims.getSubject()).thenReturn("user@example.com");
 
         when(jwtUtil.validatePasswordResetToken("validToken")).thenReturn(claims);
-        User user = new User("Jane Doe", "user@example.com", "oldHash", "USER");
+        User user = new User("Jane Doe", "user@example.com", "oldHash", "ADMIN");
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.encode("NewPassword@123")).thenReturn("newHashedPassword");
 

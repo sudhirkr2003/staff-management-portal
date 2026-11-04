@@ -37,14 +37,14 @@ public class EmployeeController {
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody EmployeeRequest request
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         EmployeeResponse response = employeeService.createEmployee(request, principal.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Employee created successfully", response));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<EmployeeResponse>>> getAllEmployees(@AuthenticationPrincipal UserPrincipal principal) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         List<EmployeeResponse> employees = employeeService.getAllEmployees(principal.getId());
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Employees retrieved successfully", employees));
     }
@@ -54,7 +54,7 @@ public class EmployeeController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long id
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         EmployeeResponse employee = employeeService.getEmployeeById(id, principal.getId());
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Employee retrieved successfully", employee));
     }
@@ -65,7 +65,7 @@ public class EmployeeController {
             @PathVariable Long id,
             @Valid @RequestBody EmployeeRequest request
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         EmployeeResponse updated = employeeService.updateEmployee(id, request, principal.getId());
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Employee updated successfully", updated));
     }
@@ -89,7 +89,7 @@ public class EmployeeController {
     private void validateAdmin(UserPrincipal principal) {
         validatePrincipal(principal);
         if (principal.getRole() == null || !"ADMIN".equalsIgnoreCase(principal.getRole())) {
-            throw new AccessDeniedException("Access denied: Only administrators can delete employees");
+            throw new AccessDeniedException("Access denied: Only administrators can access employee management");
         }
     }
 }

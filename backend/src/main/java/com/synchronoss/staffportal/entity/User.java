@@ -29,7 +29,7 @@ public class User {
     private String password;
 
     @Column(name = "role", nullable = false, length = 50)
-    private String role;
+    private String role = "ADMIN";
 
     @Column(name = "google_id", unique = true, length = 100)
     private String googleId;
@@ -47,13 +47,14 @@ public class User {
     private LocalDateTime updatedAt;
 
     public User() {
+        this.role = "ADMIN";
     }
 
     public User(String fullName, String email, String password, String role) {
         this.fullName = fullName;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.role = (role == null || role.equalsIgnoreCase("USER")) ? "ADMIN" : role;
         this.authProvider = "LOCAL";
         this.emailVerified = false;
     }
@@ -62,7 +63,7 @@ public class User {
         this.fullName = fullName;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.role = (role == null || role.equalsIgnoreCase("USER")) ? "ADMIN" : role;
         this.googleId = googleId;
         this.authProvider = authProvider;
         this.emailVerified = emailVerified;
@@ -70,12 +71,18 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
+        if (this.role == null || this.role.equalsIgnoreCase("USER")) {
+            this.role = "ADMIN";
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
+        if (this.role == null || this.role.equalsIgnoreCase("USER")) {
+            this.role = "ADMIN";
+        }
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -112,11 +119,11 @@ public class User {
     }
 
     public String getRole() {
-        return role;
+        return (role == null || role.equalsIgnoreCase("USER")) ? "ADMIN" : role;
     }
 
     public void setRole(String role) {
-        this.role = role;
+        this.role = (role == null || role.equalsIgnoreCase("USER")) ? "ADMIN" : role;
     }
 
     public String getGoogleId() {

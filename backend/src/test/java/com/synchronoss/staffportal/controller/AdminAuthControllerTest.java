@@ -245,7 +245,7 @@ class AdminAuthControllerTest {
     @Test
     void completeGoogleRegistration_ValidRequest_ReturnsCreated() throws Exception {
         GoogleRegistrationRequest request = new GoogleRegistrationRequest("validToken", "Password@123", "Password@123");
-        LoginResponse response = new LoginResponse("testToken", 2L, "Google User", "user@gmail.com", "USER");
+        LoginResponse response = new LoginResponse("testToken", 2L, "Google User", "user@gmail.com", "ADMIN");
         when(adminAuthService.completeGoogleRegistration(any(GoogleRegistrationRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
@@ -255,7 +255,7 @@ class AdminAuthControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Account created successfully"))
                 .andExpect(jsonPath("$.data.token").value("testToken"))
-                .andExpect(jsonPath("$.data.role").value("USER"));
+                .andExpect(jsonPath("$.data.role").value("ADMIN"));
     }
 
     @Test

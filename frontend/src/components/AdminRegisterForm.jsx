@@ -285,7 +285,7 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
         <button
           type="button"
           onClick={handleGoogleClick}
-          className="btn-google compact-btn"
+          className="btn-google"
         >
           <svg className="google-icon" width="18" height="18" viewBox="0 0 24 24">
             <path

@@ -188,14 +188,19 @@ public class AdminAuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
+        if (user.getRole() == null || !"ADMIN".equalsIgnoreCase(user.getRole())) {
+            user.setRole("ADMIN");
+            user = userRepository.save(user);
+        }
+
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), "ADMIN");
 
         return new LoginResponse(
                 token,
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getRole()
+                "ADMIN"
         );
     }
 
@@ -203,11 +208,16 @@ public class AdminAuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (user.getRole() == null || !"ADMIN".equalsIgnoreCase(user.getRole())) {
+            user.setRole("ADMIN");
+            user = userRepository.save(user);
+        }
+
         return new UserProfileResponse(
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getRole()
+                "ADMIN"
         );
     }
 
@@ -217,13 +227,14 @@ public class AdminAuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setFullName(request.getFullName().trim());
+        user.setRole("ADMIN");
         User updated = userRepository.save(user);
 
         return new UserProfileResponse(
                 updated.getId(),
                 updated.getFullName(),
                 updated.getEmail(),
-                updated.getRole()
+                "ADMIN"
         );
     }
 
@@ -250,20 +261,20 @@ public class AdminAuthService {
         newUser.setFullName(fullName != null && !fullName.trim().isEmpty() ? fullName.trim() : email);
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole("USER");
+        newUser.setRole("ADMIN");
         newUser.setGoogleId(googleId);
         newUser.setAuthProvider("BOTH");
         newUser.setEmailVerified(true);
 
         User savedUser = userRepository.save(newUser);
-        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getEmail(), "ADMIN");
 
         return new LoginResponse(
                 token,
                 savedUser.getId(),
                 savedUser.getFullName(),
                 savedUser.getEmail(),
-                savedUser.getRole()
+                "ADMIN"
         );
     }
 
@@ -400,16 +411,17 @@ public class AdminAuthService {
         user.setGoogleId(googleId);
         user.setAuthProvider("BOTH");
         user.setEmailVerified(true);
+        user.setRole("ADMIN");
 
         User savedUser = userRepository.save(user);
-        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getEmail(), "ADMIN");
 
         return new LoginResponse(
                 token,
                 savedUser.getId(),
                 savedUser.getFullName(),
                 savedUser.getEmail(),
-                savedUser.getRole()
+                "ADMIN"
         );
     }
 

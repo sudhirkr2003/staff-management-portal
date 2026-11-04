@@ -52,7 +52,7 @@ const WelcomePage = ({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
-  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(currentPath === '/company');
   const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState(null);
 
   const empDetailId = matchEmployeeId(currentPath);
@@ -136,6 +136,12 @@ const WelcomePage = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (currentPath === '/company') {
+      setIsCompanyModalOpen(true);
+    }
+  }, [currentPath]);
 
   const fetchStaff = async () => {
     setIsLoadingEmployees(true);
@@ -266,7 +272,23 @@ const WelcomePage = ({
 
   const handleOpenManageCompany = () => {
     setIsDropdownOpen(false);
+    if (!company) {
+      if (onNavigate) {
+        onNavigate('/company/create');
+      }
+      return;
+    }
     setIsCompanyModalOpen(true);
+    if (onNavigate) {
+      onNavigate('/company');
+    }
+  };
+
+  const handleCloseManageCompany = () => {
+    setIsCompanyModalOpen(false);
+    if (currentPath === '/company' && onNavigate) {
+      onNavigate('/dashboard');
+    }
   };
 
   const handleOpenChangePassword = () => {
@@ -456,7 +478,14 @@ const WelcomePage = ({
       <header className="dashboard-top-header">
         <div className="dashboard-top-header-inner">
           <div className="dashboard-header-left">
-            <span className="dashboard-brand-title">Staff Management Portal</span>
+            <img
+              src="/staff-management-mark.png"
+              alt="Staff Management Portal"
+              className="dashboard-brand-logo"
+            />
+            <span className="dashboard-brand-title">
+              Staff Management Portal
+            </span>
           </div>
 
           <div className="dashboard-user-area" ref={dropdownRef}>
@@ -477,8 +506,8 @@ const WelcomePage = ({
                   <div className="dropdown-user-details">
                     <div className="dropdown-name">{user?.fullName}</div>
                     <div className="dropdown-email">{user?.email}</div>
-                    <span className={`badge-role ${user?.role === 'ADMIN' ? 'admin' : 'user'} dropdown-role`}>
-                      {user?.role || 'USER'}
+                    <span className="badge-role admin dropdown-role">
+                      Administrator
                     </span>
                   </div>
                 </div>
@@ -512,9 +541,10 @@ const WelcomePage = ({
                   type="button"
                   onClick={handleOpenManageCompany}
                   className="dropdown-action-btn"
+                  aria-label="Manage Organization"
                 >
                   <Building2 size={16} />
-                  <span>Manage Company</span>
+                  <span>Manage Organization</span>
                 </button>
 
                 <div className="dropdown-divider" />
@@ -668,6 +698,21 @@ const WelcomePage = ({
                 <Users size={18} />
               </div>
               <span className="sidebar-item-text">Manage Employees</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+                if (onNavigate) onNavigate('/departments');
+              }}
+              className={`sidebar-nav-item ${isDepartmentsPage ? 'active' : ''}`}
+              title="Departments"
+            >
+              <div className="sidebar-item-icon">
+                <Building2 size={18} />
+              </div>
+              <span className="sidebar-item-text">Departments</span>
             </button>
           </nav>
         </aside>
@@ -1282,7 +1327,7 @@ const WelcomePage = ({
         <ManageCompanyModal
           company={company}
           currentUser={user}
-          onClose={() => setIsCompanyModalOpen(false)}
+          onClose={handleCloseManageCompany}
           onCompanyUpdated={(updatedCompany) => {
             setCompany(updatedCompany);
             if (onCompanyUpdate) {

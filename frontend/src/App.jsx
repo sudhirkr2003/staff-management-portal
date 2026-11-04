@@ -10,7 +10,7 @@ import CreateCompanyPage from './components/CreateCompanyPage';
 import NotFoundPage from './components/NotFoundPage';
 import { getStoredUser, getStoredToken, logoutUser, getProfile } from './services/authService';
 import { getMyCompany } from './services/companyService';
-import { Users, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import './App.css';
 
 const resolvePath = (target) => {
@@ -32,6 +32,10 @@ const resolvePath = (target) => {
     case '/create-company':
     case '/company/create':
       return '/company/create';
+    case 'COMPANY':
+    case 'MANAGE_COMPANY':
+    case '/company':
+      return '/company';
     case 'WELCOME':
     case 'DASHBOARD':
     case '/dashboard':
@@ -59,6 +63,8 @@ const resolvePath = (target) => {
       return target;
   }
 };
+
+const isAdminRole = (role) => typeof role === 'string' && (role === 'ADMIN' || role === 'ROLE_ADMIN' || role.toUpperCase().includes('ADMIN'));
 
 const matchEmployeeId = (path) => {
   const m = path.match(/^\/employees\/(\d+)$/);
@@ -110,36 +116,42 @@ const App = () => {
         setBackendConnectionError(false);
 
         let companyData = null;
-        if (response.data.role === 'ADMIN') {
+        if (isAdminRole(response.data.role)) {
           try {
             const compRes = await getMyCompany();
             if (compRes && compRes.success && compRes.data) {
               companyData = compRes.data;
             }
-          } catch (e) {}
+          } catch (e) {
+            if (e.response && (e.response.status === 401 || e.response.status === 403)) {
+              throw e;
+            }
+            setBackendConnectionError(true);
+            return;
+          }
         }
         setCurrentCompany(companyData);
 
-        if (response.data.role === 'ADMIN' && !companyData) {
-          if (
-            targetPath === '/' ||
-            targetPath === '/login' ||
-            targetPath === '/register' ||
-            targetPath === '/dashboard' ||
-            targetPath === '/employees' ||
-            targetPath === '/employees/new' ||
-            targetPath === '/departments' ||
-            targetPath === '/company' ||
-            matchEmployeeId(targetPath) ||
-            matchEmployeeEdit(targetPath)
-          ) {
-            window.history.replaceState({}, '', '/company/create');
-            setCurrentPath('/company/create');
-            return;
+        if (isAdminRole(response.data.role) && !companyData) {
+          window.history.replaceState({}, '', '/company/create');
+          setCurrentPath('/company/create');
+          return;
+        }
+
+        if (targetPath === '/company/create') {
+          if (companyData) {
+            window.history.replaceState({}, '', '/dashboard');
+            setCurrentPath('/dashboard');
           }
-        } else if (targetPath === '/' || targetPath === '/login' || targetPath === '/register') {
+        } else if (targetPath === '/company') {
+          window.history.replaceState({}, '', '/company');
+          setCurrentPath('/company');
+        } else if (targetPath === '/' || targetPath === '/login' || targetPath === '/register' || !targetPath) {
           window.history.replaceState({}, '', '/dashboard');
           setCurrentPath('/dashboard');
+        } else {
+          window.history.replaceState({}, '', targetPath);
+          setCurrentPath(targetPath);
         }
       }
     } catch (err) {
@@ -171,14 +183,14 @@ const App = () => {
     let targetPath = resolvePath(target);
 
     if ((targetPath === '/login' || targetPath === '/register') && getStoredToken() && currentUser) {
-      targetPath = currentUser.role === 'ADMIN' && !currentCompany ? '/company/create' : '/dashboard';
+      targetPath = isAdminRole(currentUser.role) && !currentCompany ? '/company/create' : '/dashboard';
     }
 
     if (isProtectedPath(targetPath) && !getStoredToken()) {
       targetPath = '/home';
     }
 
-    if (isProtectedPath(targetPath) && currentUser && currentUser.role === 'ADMIN' && !currentCompany) {
+    if (isProtectedPath(targetPath) && currentUser && isAdminRole(currentUser.role) && !currentCompany) {
       if (targetPath !== '/company/create') {
         targetPath = '/company/create';
       }
@@ -222,9 +234,8 @@ const App = () => {
       const token = params.get('token');
       if (token) {
         localStorage.setItem('auth_token', token);
-        window.history.replaceState({}, document.title, '/dashboard');
-        setCurrentPath('/dashboard');
-        verifySession(token, null, '/dashboard');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        verifySession(token, null, null);
         return;
       }
     } else if (status === 'google_register') {
@@ -357,25 +368,40 @@ const App = () => {
     setGoogleRegData(null);
     setLoginSuccessMessage('');
     setCurrentUser(userData);
+    setCurrentCompany(null);
     setBackendConnectionError(false);
 
-    if (userData && userData.role === 'ADMIN') {
+    if (userData && isAdminRole(userData.role)) {
       let companyData = null;
       try {
         const compRes = await getMyCompany();
         if (compRes && compRes.success && compRes.data) {
           companyData = compRes.data;
         }
-      } catch (e) {}
-      setCurrentCompany(companyData);
+        setCurrentCompany(companyData);
 
-      if (!companyData) {
-        navigateTo('/company/create');
-      } else {
-        navigateTo('/dashboard');
+        if (!companyData) {
+          window.history.pushState({}, '', '/company/create');
+          setCurrentPath('/company/create');
+        } else {
+          window.history.pushState({}, '', '/dashboard');
+          setCurrentPath('/dashboard');
+        }
+      } catch (e) {
+        if (e.response && (e.response.status === 401 || e.response.status === 403)) {
+          logoutUser();
+          setCurrentUser(null);
+          setCurrentCompany(null);
+          setLoginError('Your session has expired. Please sign in again.');
+          window.history.pushState({}, '', '/login');
+          setCurrentPath('/login');
+        } else {
+          setBackendConnectionError(true);
+        }
       }
     } else {
-      navigateTo('/dashboard');
+      window.history.pushState({}, '', '/dashboard');
+      setCurrentPath('/dashboard');
     }
   };
 
@@ -412,9 +438,11 @@ const App = () => {
     return (
       <div className="session-loading-container">
         <div className="session-loading-card">
-          <div className="brand-logo-icon session-loading-logo">
-            <Users size={28} />
-          </div>
+          <img
+            src="/staff-management-mark.png"
+            alt="Staff Management Portal"
+            className="session-loading-logo-img"
+          />
           <h2 className="session-loading-title">Staff Management Portal</h2>
           <div className="session-loading-spinner-row">
             <Loader2 size={18} className="spinner" />
@@ -425,13 +453,15 @@ const App = () => {
     );
   }
 
-  if (backendConnectionError && (!currentUser || currentPath === '/dashboard' || currentPath === '/' || currentPath === '/company/create')) {
+  if (backendConnectionError && (!currentUser || currentPath === '/dashboard' || currentPath === '/' || currentPath === '/company/create' || currentPath === '/company')) {
     return (
       <div className="session-loading-container">
         <div className="session-loading-card">
-          <div className="brand-logo-icon session-loading-logo">
-            <Users size={28} />
-          </div>
+          <img
+            src="/staff-management-mark.png"
+            alt="Staff Management Portal"
+            className="session-loading-logo-img"
+          />
           <h2 className="session-loading-title">Staff Management Portal</h2>
           <div className="session-loading-error-row">
             <AlertCircle size={20} className="connection-error-icon" />
@@ -461,7 +491,7 @@ const App = () => {
       setCurrentPath('/login');
       return null;
     }
-    if (currentUser.role !== 'ADMIN' || currentCompany) {
+    if (!isAdminRole(currentUser.role) || currentCompany) {
       window.history.replaceState({}, '', '/dashboard');
       setCurrentPath('/dashboard');
       return null;
@@ -483,6 +513,7 @@ const App = () => {
     currentPath === '/employees' ||
     currentPath === '/employees/new' ||
     currentPath === '/departments' ||
+    currentPath === '/company' ||
     matchEmployeeId(currentPath) ||
     matchEmployeeEdit(currentPath)
   ) {
@@ -491,7 +522,7 @@ const App = () => {
       setCurrentPath('/home');
       return null;
     }
-    if (currentUser.role === 'ADMIN' && !currentCompany) {
+    if (isAdminRole(currentUser.role) && !currentCompany) {
       window.history.replaceState({}, '', '/company/create');
       setCurrentPath('/company/create');
       return null;
@@ -533,9 +564,11 @@ const App = () => {
     <div className="app-shell">
       <header className="app-header">
         <div className="header-brand" onClick={() => navigateTo('/home')}>
-          <div className="brand-logo-icon">
-            <Users size={20} />
-          </div>
+          <img
+            src="/staff-management-mark.png"
+            alt="Staff Management Portal"
+            className="brand-logo-img"
+          />
           <span className="brand-logo-text">Staff Management Portal</span>
         </div>
 
