@@ -4,16 +4,17 @@ import {
   Loader2, X, Users, Lock, ArrowLeft,
   UserPlus, Building2, Briefcase, Calendar, Phone,
   LayoutDashboard, TrendingUp, Plus, ArrowRight, Menu, LogOut,
-  Search, Eye, IndianRupee, Edit2
+  Search, Eye, IndianRupee, Edit2, Trash2
 } from 'lucide-react';
 import { updateProfile } from '../services/authService';
-import { createEmployee, getEmployees } from '../services/employeeService';
+import { createEmployee, getEmployees, deleteEmployee } from '../services/employeeService';
 import { getMyCompany } from '../services/companyService';
 import ChangePasswordModal from './ChangePasswordModal';
 import ManageCompanyModal from './ManageCompanyModal';
 import EmployeeDetailsModal from './EmployeeDetailsModal';
 import EmployeeDetailPage from './EmployeeDetailPage';
 import EditEmployeePage from './EditEmployeePage';
+import DeleteEmployeeModal from './DeleteEmployeeModal';
 
 const matchEmployeeId = (path) => {
   const m = path ? path.match(/^\/employees\/(\d+)$/) : null;
@@ -85,6 +86,10 @@ const WelcomePage = ({
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
   const [fetchError, setFetchError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [isDeletingEmployee, setIsDeletingEmployee] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState('');
 
   const [employeeForm, setEmployeeForm] = useState({
     fullName: '',
@@ -148,6 +153,50 @@ const WelcomePage = ({
   useEffect(() => {
     fetchStaff();
   }, []);
+
+  const handleInitiateDelete = (emp) => {
+    setDeleteError('');
+    setEmployeeToDelete(emp);
+  };
+
+  const handleCancelDelete = () => {
+    if (isDeletingEmployee) return;
+    setEmployeeToDelete(null);
+    setDeleteError('');
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!employeeToDelete || isDeletingEmployee) return;
+    setIsDeletingEmployee(true);
+    setDeleteError('');
+    try {
+      const response = await deleteEmployee(employeeToDelete.id);
+      if (response && response.success) {
+        const deletedName = employeeToDelete.fullName;
+        const deletedId = employeeToDelete.id;
+        setEmployees((prev) => prev.filter((e) => e.id !== deletedId));
+        setDeleteSuccess(`Employee "${deletedName}" was successfully deleted.`);
+        setEmployeeToDelete(null);
+        fetchStaff();
+        if (empDetailId && String(empDetailId) === String(deletedId)) {
+          if (onNavigate) onNavigate('/employees');
+        }
+      } else {
+        setDeleteError(response?.message || 'Failed to delete employee.');
+      }
+    } catch (err) {
+      setDeleteError(err.response?.data?.message || 'Failed to delete employee. Please try again.');
+    } finally {
+      setIsDeletingEmployee(false);
+    }
+  };
+
+  useEffect(() => {
+    if (deleteSuccess) {
+      const timer = setTimeout(() => setDeleteSuccess(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [deleteSuccess]);
 
   const analytics = useMemo(() => {
     const totalEmployees = employees.length;
@@ -622,7 +671,7 @@ const WelcomePage = ({
           {empEditId ? (
             <EditEmployeePage employeeId={empEditId} onNavigate={onNavigate} />
           ) : empDetailId ? (
-            <EmployeeDetailPage employeeId={empDetailId} onNavigate={onNavigate} />
+            <EmployeeDetailPage employeeId={empDetailId} onNavigate={onNavigate} onDelete={handleInitiateDelete} />
           ) : isAddEmployee ? (
             <div className="edit-employee-page-wrapper">
               <div className="edit-employee-card">
@@ -1078,6 +1127,13 @@ const WelcomePage = ({
                 </div>
               </div>
 
+              {deleteSuccess && (
+                <div className="alert alert-success compact-alert" style={{ marginBottom: '1rem' }}>
+                  <CheckCircle2 size={16} />
+                  <span>{deleteSuccess}</span>
+                </div>
+              )}
+
               {fetchError && (
                 <div className="alert alert-error compact-alert">
                   <AlertCircle size={16} />
@@ -1175,6 +1231,15 @@ const WelcomePage = ({
                                 aria-label="Edit Employee"
                               >
                                 <Edit2 size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleInitiateDelete(emp)}
+                                className="btn-table-action-delete"
+                                title="Delete Employee"
+                                aria-label="Delete Employee"
+                              >
+                                <Trash2 size={16} />
                               </button>
                             </div>
                           </td>
@@ -1530,6 +1595,16 @@ const WelcomePage = ({
             </form>
           </div>
         </div>
+      )}
+
+      {employeeToDelete && (
+        <DeleteEmployeeModal
+          employee={employeeToDelete}
+          onCancel={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeletingEmployee}
+          error={deleteError}
+        />
       )}
 
       {isChangePasswordModalOpen && (

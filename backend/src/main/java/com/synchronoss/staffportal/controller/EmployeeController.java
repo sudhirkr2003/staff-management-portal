@@ -9,6 +9,7 @@ import com.synchronoss.staffportal.service.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,7 +75,7 @@ public class EmployeeController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long id
     ) {
-        validatePrincipal(principal);
+        validateAdmin(principal);
         employeeService.deleteEmployee(id, principal.getId());
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Employee deleted successfully"));
     }
@@ -82,6 +83,13 @@ public class EmployeeController {
     private void validatePrincipal(UserPrincipal principal) {
         if (principal == null) {
             throw new InvalidCredentialsException("Unauthorized: Authentication token is missing or invalid");
+        }
+    }
+
+    private void validateAdmin(UserPrincipal principal) {
+        validatePrincipal(principal);
+        if (principal.getRole() == null || !"ADMIN".equalsIgnoreCase(principal.getRole())) {
+            throw new AccessDeniedException("Access denied: Only administrators can delete employees");
         }
     }
 }

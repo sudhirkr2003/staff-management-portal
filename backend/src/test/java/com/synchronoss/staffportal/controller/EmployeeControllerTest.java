@@ -5,6 +5,8 @@ import com.synchronoss.staffportal.config.JwtUtil;
 import com.synchronoss.staffportal.dto.EmployeeRequest;
 import com.synchronoss.staffportal.dto.EmployeeResponse;
 import com.synchronoss.staffportal.exception.EmailAlreadyExistsException;
+import com.synchronoss.staffportal.exception.ForbiddenOperationException;
+import com.synchronoss.staffportal.exception.ResourceNotFoundException;
 import com.synchronoss.staffportal.service.EmployeeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,10 @@ import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -162,6 +167,62 @@ class EmployeeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray());
+    }
+
+    @Test
+    void deleteEmployee_WhenAdmin_ReturnsOk() throws Exception {
+        String token = jwtUtil.generateToken(1L, "admin@example.com", "ADMIN");
+
+        doNothing().when(employeeService).deleteEmployee(10L, 1L);
+
+        mockMvc.perform(delete("/api/employees/10")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Employee deleted successfully"));
+    }
+
+    @Test
+    void deleteEmployee_WhenUnauthenticated_ReturnsUnauthorized() throws Exception {
+        mockMvc.perform(delete("/api/employees/10"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteEmployee_WhenUserRole_ReturnsForbidden() throws Exception {
+        String token = jwtUtil.generateToken(2L, "staff@example.com", "USER");
+
+        mockMvc.perform(delete("/api/employees/10")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteEmployee_WhenNotFound_ReturnsNotFound() throws Exception {
+        String token = jwtUtil.generateToken(1L, "admin@example.com", "ADMIN");
+
+        doThrow(new ResourceNotFoundException("Employee not found with id: 99"))
+                .when(employeeService).deleteEmployee(99L, 1L);
+
+        mockMvc.perform(delete("/api/employees/99")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Employee not found with id: 99"));
+    }
+
+    @Test
+    void deleteEmployee_WhenCrossCompany_ReturnsForbidden() throws Exception {
+        String token = jwtUtil.generateToken(1L, "admin@example.com", "ADMIN");
+
+        doThrow(new ForbiddenOperationException("Access denied: You do not own this employee record"))
+                .when(employeeService).deleteEmployee(20L, 1L);
+
+        mockMvc.perform(delete("/api/employees/20")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Access denied: You do not own this employee record"));
     }
 }
 

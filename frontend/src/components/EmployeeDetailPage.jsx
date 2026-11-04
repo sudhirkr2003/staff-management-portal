@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, AlertCircle, Edit2 } from 'lucide-react';
+import { Loader2, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import { getEmployeeById } from '../services/employeeService';
 
 const formatIndianCurrency = (amount) => {
@@ -34,7 +34,7 @@ const formatJoiningDate = (dateStr) => {
   }
 };
 
-const EmployeeDetailPage = ({ employeeId, onNavigate }) => {
+const EmployeeDetailPage = ({ employeeId, onNavigate, onDelete }) => {
   const [employee, setEmployee] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -86,15 +86,26 @@ const EmployeeDetailPage = ({ employeeId, onNavigate }) => {
               <div className="emp-details-title-group">
                 <h2 className="emp-details-modal-title">Employee Details</h2>
               </div>
-              <button
-                type="button"
-                onClick={() => onNavigate(`/employees/${employeeId}/edit`)}
-                className="btn-emp-edit-compact"
-                title="Edit Employee"
-                aria-label="Edit Employee"
-              >
-                <Edit2 size={16} />
-              </button>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(`/employees/${employeeId}/edit`)}
+                  className="btn-emp-edit-compact"
+                  title="Edit Employee"
+                  aria-label="Edit Employee"
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete && onDelete(employee)}
+                  className="btn-emp-delete-compact"
+                  title="Delete Employee"
+                  aria-label="Delete Employee"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="emp-details-body">
