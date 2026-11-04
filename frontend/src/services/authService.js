@@ -24,6 +24,24 @@ export const loginUser = async (credentials) => {
   return response.data;
 };
 
+export const completeGoogleRegistration = async (registrationData) => {
+  const response = await api.post('/api/auth/google/complete-registration', registrationData);
+  if (response.data && response.data.data && response.data.data.token) {
+    localStorage.setItem('auth_token', response.data.data.token);
+    localStorage.setItem('auth_user', JSON.stringify(response.data.data));
+  }
+  return response.data;
+};
+
+export const linkGoogleAccount = async (linkData) => {
+  const response = await api.post('/api/auth/google/link-account', linkData);
+  if (response.data && response.data.data && response.data.data.token) {
+    localStorage.setItem('auth_token', response.data.data.token);
+    localStorage.setItem('auth_user', JSON.stringify(response.data.data));
+  }
+  return response.data;
+};
+
 export const getProfile = async () => {
   const response = await api.get('/api/auth/profile');
   return response.data;
@@ -36,6 +54,31 @@ export const updateProfile = async (profileData) => {
     const updated = { ...existing, ...response.data.data };
     localStorage.setItem('auth_user', JSON.stringify(updated));
   }
+  return response.data;
+};
+
+export const changePassword = async (passwordData) => {
+  const response = await api.post('/api/auth/change-password', passwordData);
+  return response.data;
+};
+
+export const forgotPassword = async (emailData) => {
+  const response = await api.post('/api/auth/forgot-password', emailData);
+  return response.data;
+};
+
+export const resendResetOtp = async (emailData) => {
+  const response = await api.post('/api/auth/resend-reset-otp', emailData);
+  return response.data;
+};
+
+export const verifyResetOtp = async (verificationData) => {
+  const response = await api.post('/api/auth/verify-reset-otp', verificationData);
+  return response.data;
+};
+
+export const resetPassword = async (resetData) => {
+  const response = await api.post('/api/auth/reset-password', resetData);
   return response.data;
 };
 
@@ -52,4 +95,8 @@ export const getStoredUser = () => {
   } catch (e) {
     return null;
   }
+};
+
+export const getStoredToken = () => {
+  return localStorage.getItem('auth_token');
 };

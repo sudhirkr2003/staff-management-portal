@@ -25,11 +25,20 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     private String password;
 
     @Column(name = "role", nullable = false, length = 50)
     private String role;
+
+    @Column(name = "google_id", unique = true, length = 100)
+    private String googleId;
+
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    private String authProvider = "LOCAL";
+
+    @Column(name = "email_verified", nullable = false)
+    private Boolean emailVerified = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -45,6 +54,18 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.authProvider = "LOCAL";
+        this.emailVerified = false;
+    }
+
+    public User(String fullName, String email, String password, String role, String googleId, String authProvider, Boolean emailVerified) {
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.googleId = googleId;
+        this.authProvider = authProvider;
+        this.emailVerified = emailVerified;
     }
 
     @PrePersist
@@ -96,6 +117,30 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public String getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(String authProvider) {
+        this.authProvider = authProvider;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     public LocalDateTime getCreatedAt() {

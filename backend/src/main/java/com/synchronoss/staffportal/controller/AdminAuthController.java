@@ -3,12 +3,18 @@ package com.synchronoss.staffportal.controller;
 import com.synchronoss.staffportal.config.UserPrincipal;
 import com.synchronoss.staffportal.dto.AdminRegistrationRequest;
 import com.synchronoss.staffportal.dto.ApiResponse;
+import com.synchronoss.staffportal.dto.ChangePasswordRequest;
+import com.synchronoss.staffportal.dto.ForgotPasswordRequest;
+import com.synchronoss.staffportal.dto.GoogleLinkAccountRequest;
+import com.synchronoss.staffportal.dto.GoogleRegistrationRequest;
 import com.synchronoss.staffportal.dto.LoginRequest;
 import com.synchronoss.staffportal.dto.LoginResponse;
 import com.synchronoss.staffportal.dto.OtpVerificationRequest;
 import com.synchronoss.staffportal.dto.ResendOtpRequest;
+import com.synchronoss.staffportal.dto.ResetPasswordRequest;
 import com.synchronoss.staffportal.dto.UpdateProfileRequest;
 import com.synchronoss.staffportal.dto.UserProfileResponse;
+import com.synchronoss.staffportal.dto.VerifyResetOtpRequest;
 import com.synchronoss.staffportal.exception.InvalidCredentialsException;
 import com.synchronoss.staffportal.service.AdminAuthService;
 import jakarta.validation.Valid;
@@ -74,6 +80,18 @@ public class AdminAuthController {
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Login successful", response));
     }
 
+    @PostMapping("/google/complete-registration")
+    public ResponseEntity<ApiResponse<LoginResponse>> completeGoogleRegistration(@Valid @RequestBody GoogleRegistrationRequest request) {
+        LoginResponse response = adminAuthService.completeGoogleRegistration(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Account created successfully", response));
+    }
+
+    @PostMapping("/google/link-account")
+    public ResponseEntity<ApiResponse<LoginResponse>> linkGoogleAccount(@Valid @RequestBody GoogleLinkAccountRequest request) {
+        LoginResponse response = adminAuthService.linkGoogleAccount(request);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Account linked successfully", response));
+    }
+
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>> getProfile(@AuthenticationPrincipal UserPrincipal principal) {
         if (principal == null) {
@@ -93,5 +111,56 @@ public class AdminAuthController {
         }
         UserProfileResponse updated = adminAuthService.updateProfile(principal.getId(), request);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Profile updated successfully", updated));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        if (principal == null) {
+            throw new InvalidCredentialsException("Unauthorized access");
+        }
+        adminAuthService.changePassword(principal.getId(), request);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Password changed successfully."));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Map<String, String>>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        adminAuthService.sendPasswordResetOtp(request);
+        ApiResponse<Map<String, String>> response = new ApiResponse<>(
+                true,
+                "If the email is registered, a password reset OTP has been sent.",
+                Collections.singletonMap("email", request.getEmail().trim().toLowerCase())
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/resend-reset-otp")
+    public ResponseEntity<ApiResponse<Map<String, String>>> resendResetOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+        adminAuthService.resendPasswordResetOtp(request);
+        ApiResponse<Map<String, String>> response = new ApiResponse<>(
+                true,
+                "A new password reset OTP has been sent.",
+                Collections.singletonMap("email", request.getEmail().trim().toLowerCase())
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<ApiResponse<Map<String, String>>> verifyResetOtp(@Valid @RequestBody VerifyResetOtpRequest request) {
+        String resetToken = adminAuthService.verifyPasswordResetOtp(request);
+        ApiResponse<Map<String, String>> response = new ApiResponse<>(
+                true,
+                "OTP verified successfully.",
+                Collections.singletonMap("resetToken", resetToken)
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        adminAuthService.resetPassword(request);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Password reset successfully."));
     }
 }

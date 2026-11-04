@@ -132,7 +132,8 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
   };
 
   const handleGoogleClick = () => {
-    setInfoMessage('Google Sign-In integration is planned for an upcoming release.');
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    window.location.href = `${apiBase}/oauth2/authorization/google`;
   };
 
   return (

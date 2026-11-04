@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shield, KeyRound, Users, Database, SlidersHorizontal, ArrowRight, LogIn, UserPlus } from 'lucide-react';
 
-const HomePage = ({ onNavigate }) => {
+const HomePage = ({ onNavigate, currentUser }) => {
   const scrollToAbout = (e) => {
     e.preventDefault();
     const element = document.getElementById('about-section');
@@ -31,22 +31,35 @@ const HomePage = ({ onNavigate }) => {
         </nav>
 
         <div className="home-nav-actions">
-          <button
-            type="button"
-            onClick={() => onNavigate('LOGIN')}
-            className="btn-nav-login"
-          >
-            <LogIn size={16} />
-            <span>Login</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigate('REGISTER')}
-            className="btn-nav-signup"
-          >
-            <UserPlus size={16} />
-            <span>Sign Up</span>
-          </button>
+          {currentUser ? (
+            <button
+              type="button"
+              onClick={() => onNavigate('WELCOME')}
+              className="btn-nav-login"
+            >
+              <Users size={16} />
+              <span>Dashboard</span>
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => onNavigate('LOGIN')}
+                className="btn-nav-login"
+              >
+                <LogIn size={16} />
+                <span>Login</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('REGISTER')}
+                className="btn-nav-signup"
+              >
+                <UserPlus size={16} />
+                <span>Sign Up</span>
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -59,21 +72,34 @@ const HomePage = ({ onNavigate }) => {
           </p>
 
           <div className="hero-cta-group">
-            <button
-              type="button"
-              onClick={() => onNavigate('REGISTER')}
-              className="btn-hero-primary"
-            >
-              <span>Get Started</span>
-              <ArrowRight size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('LOGIN')}
-              className="btn-hero-secondary"
-            >
-              <span>Login</span>
-            </button>
+            {currentUser ? (
+              <button
+                type="button"
+                onClick={() => onNavigate('WELCOME')}
+                className="btn-hero-primary"
+              >
+                <span>Go to Dashboard</span>
+                <ArrowRight size={18} />
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('REGISTER')}
+                  className="btn-hero-primary"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('LOGIN')}
+                  className="btn-hero-secondary"
+                >
+                  <span>Login</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </section>

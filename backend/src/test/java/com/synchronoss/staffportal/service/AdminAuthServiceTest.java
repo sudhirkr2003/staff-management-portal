@@ -2,12 +2,19 @@ package com.synchronoss.staffportal.service;
 
 import com.synchronoss.staffportal.config.JwtUtil;
 import com.synchronoss.staffportal.dto.AdminRegistrationRequest;
+import com.synchronoss.staffportal.dto.ChangePasswordRequest;
+import com.synchronoss.staffportal.dto.ForgotPasswordRequest;
+import com.synchronoss.staffportal.dto.GoogleLinkAccountRequest;
+import com.synchronoss.staffportal.dto.GoogleRegistrationRequest;
 import com.synchronoss.staffportal.dto.LoginRequest;
 import com.synchronoss.staffportal.dto.LoginResponse;
 import com.synchronoss.staffportal.dto.OtpVerificationRequest;
 import com.synchronoss.staffportal.dto.ResendOtpRequest;
+import com.synchronoss.staffportal.dto.ResetPasswordRequest;
 import com.synchronoss.staffportal.dto.UpdateProfileRequest;
 import com.synchronoss.staffportal.dto.UserProfileResponse;
+import com.synchronoss.staffportal.dto.VerifyResetOtpRequest;
+import com.synchronoss.staffportal.entity.PasswordResetOtp;
 import com.synchronoss.staffportal.entity.PendingRegistration;
 import com.synchronoss.staffportal.entity.User;
 import com.synchronoss.staffportal.exception.EmailAlreadyExistsException;
@@ -19,6 +26,7 @@ import com.synchronoss.staffportal.exception.OtpCooldownException;
 import com.synchronoss.staffportal.exception.OtpExpiredException;
 import com.synchronoss.staffportal.exception.PasswordMismatchException;
 import com.synchronoss.staffportal.exception.ResourceNotFoundException;
+import com.synchronoss.staffportal.repository.PasswordResetOtpRepository;
 import com.synchronoss.staffportal.repository.PendingRegistrationRepository;
 import com.synchronoss.staffportal.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +64,9 @@ class AdminAuthServiceTest {
     private PendingRegistrationRepository pendingRegistrationRepository;
 
     @Mock
+    private PasswordResetOtpRepository passwordResetOtpRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -71,6 +82,7 @@ class AdminAuthServiceTest {
         adminAuthService = new AdminAuthService(
                 userRepository,
                 pendingRegistrationRepository,
+                passwordResetOtpRepository,
                 passwordEncoder,
                 emailService,
                 jwtUtil
@@ -332,5 +344,211 @@ class AdminAuthServiceTest {
 
         assertEquals("Jane Updated", response.getFullName());
         assertEquals("admin@example.com", response.getEmail());
+    }
+
+    @Test
+    void completeGoogleRegistration_Success_CreatesUserRoleAccount() {
+        GoogleRegistrationRequest request = new GoogleRegistrationRequest("validToken", "Password@123", "Password@123");
+        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("user@gmail.com");
+        when(claims.get("googleId")).thenReturn("google-sub-123");
+        when(claims.get("fullName")).thenReturn("Google User");
+
+        when(jwtUtil.validateGoogleRegistrationToken("validToken")).thenReturn(claims);
+        when(userRepository.existsByEmail("user@gmail.com")).thenReturn(false);
+        when(userRepository.existsByGoogleId("google-sub-123")).thenReturn(false);
+        when(passwordEncoder.encode("Password@123")).thenReturn("hashedPassword");
+
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(2L);
+            return user;
+        });
+        when(jwtUtil.generateToken(2L, "user@gmail.com", "USER")).thenReturn("jwtTokenUser");
+
+        LoginResponse response = adminAuthService.completeGoogleRegistration(request);
+
+        assertNotNull(response);
+        assertEquals("jwtTokenUser", response.getToken());
+        assertEquals("USER", response.getRole());
+        assertEquals("user@gmail.com", response.getEmail());
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User saved = captor.getValue();
+        assertEquals("USER", saved.getRole());
+        assertEquals("BOTH", saved.getAuthProvider());
+        assertEquals(true, saved.getEmailVerified());
+        assertEquals("google-sub-123", saved.getGoogleId());
+    }
+
+    @Test
+    void completeGoogleRegistration_PasswordMismatch_ThrowsException() {
+        GoogleRegistrationRequest request = new GoogleRegistrationRequest("validToken", "Password@123", "Mismatch@123");
+        assertThrows(PasswordMismatchException.class, () -> adminAuthService.completeGoogleRegistration(request));
+    }
+
+    @Test
+    void completeGoogleRegistration_EmailAlreadyExists_ThrowsException() {
+        GoogleRegistrationRequest request = new GoogleRegistrationRequest("validToken", "Password@123", "Password@123");
+        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("existing@example.com");
+        when(jwtUtil.validateGoogleRegistrationToken("validToken")).thenReturn(claims);
+        when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
+
+        assertThrows(EmailAlreadyExistsException.class, () -> adminAuthService.completeGoogleRegistration(request));
+    }
+
+    @Test
+    void linkGoogleAccount_Success_UpdatesExistingUser() {
+        GoogleLinkAccountRequest request = new GoogleLinkAccountRequest("linkToken", "Password@123");
+        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("existing@example.com");
+        when(claims.get("googleId")).thenReturn("google-sub-456");
+
+        when(jwtUtil.validateGoogleLinkToken("linkToken")).thenReturn(claims);
+
+        User existingUser = new User("Existing User", "existing@example.com", "encodedHash", "ADMIN");
+        existingUser.setId(1L);
+
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches("Password@123", "encodedHash")).thenReturn(true);
+        when(userRepository.findByGoogleId("google-sub-456")).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtUtil.generateToken(1L, "existing@example.com", "ADMIN")).thenReturn("linkedJwtToken");
+
+        LoginResponse response = adminAuthService.linkGoogleAccount(request);
+
+        assertNotNull(response);
+        assertEquals("linkedJwtToken", response.getToken());
+        assertEquals("ADMIN", response.getRole());
+        assertEquals("google-sub-456", existingUser.getGoogleId());
+        assertEquals("BOTH", existingUser.getAuthProvider());
+        assertEquals(true, existingUser.getEmailVerified());
+    }
+
+    @Test
+    void linkGoogleAccount_InvalidPassword_ThrowsException() {
+        GoogleLinkAccountRequest request = new GoogleLinkAccountRequest("linkToken", "WrongPassword");
+        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("existing@example.com");
+        when(claims.get("googleId")).thenReturn("google-sub-456");
+
+        when(jwtUtil.validateGoogleLinkToken("linkToken")).thenReturn(claims);
+
+        User existingUser = new User("Existing User", "existing@example.com", "encodedHash", "ADMIN");
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches("WrongPassword", "encodedHash")).thenReturn(false);
+
+        assertThrows(InvalidCredentialsException.class, () -> adminAuthService.linkGoogleAccount(request));
+    }
+
+    @Test
+    void changePassword_ValidCredentials_Success() {
+        ChangePasswordRequest request = new ChangePasswordRequest("OldPass@123", "NewPass@123", "NewPass@123");
+        User user = new User("Jane Doe", "jane@example.com", "encodedOld", "ADMIN");
+        user.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("OldPass@123", "encodedOld")).thenReturn(true);
+        when(passwordEncoder.encode("NewPass@123")).thenReturn("encodedNew");
+
+        adminAuthService.changePassword(1L, request);
+
+        assertEquals("encodedNew", user.getPassword());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void changePassword_IncorrectCurrentPassword_ThrowsInvalidCredentials() {
+        ChangePasswordRequest request = new ChangePasswordRequest("WrongPass@123", "NewPass@123", "NewPass@123");
+        User user = new User("Jane Doe", "jane@example.com", "encodedOld", "ADMIN");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("WrongPass@123", "encodedOld")).thenReturn(false);
+
+        assertThrows(InvalidCredentialsException.class, () -> adminAuthService.changePassword(1L, request));
+    }
+
+    @Test
+    void changePassword_PasswordMismatch_ThrowsPasswordMismatchException() {
+        ChangePasswordRequest request = new ChangePasswordRequest("OldPass@123", "NewPass@123", "DifferentPass@123");
+        User user = new User("Jane Doe", "jane@example.com", "encodedOld", "ADMIN");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("OldPass@123", "encodedOld")).thenReturn(true);
+
+        assertThrows(PasswordMismatchException.class, () -> adminAuthService.changePassword(1L, request));
+    }
+
+    @Test
+    void sendPasswordResetOtp_RegisteredEmail_SendsOtp() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("user@example.com");
+        User user = new User("Jane Doe", "user@example.com", "hash", "USER");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordResetOtpRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("hashedOtp");
+
+        adminAuthService.sendPasswordResetOtp(request);
+
+        verify(passwordResetOtpRepository).save(any(PasswordResetOtp.class));
+        verify(emailService).sendPasswordResetOtpEmail(eq("user@example.com"), anyString());
+    }
+
+    @Test
+    void sendPasswordResetOtp_UnregisteredEmail_SilentlyCompletes() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("nonexistent@example.com");
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        adminAuthService.sendPasswordResetOtp(request);
+
+        verify(passwordResetOtpRepository, never()).save(any());
+        verify(emailService, never()).sendPasswordResetOtpEmail(anyString(), anyString());
+    }
+
+    @Test
+    void verifyPasswordResetOtp_ValidOtp_ReturnsTokenAndDeletesOtp() {
+        VerifyResetOtpRequest request = new VerifyResetOtpRequest("user@example.com", "123456");
+        PasswordResetOtp otpRecord = new PasswordResetOtp("user@example.com", "hashedOtp", LocalDateTime.now().plusMinutes(5), LocalDateTime.now());
+
+        when(passwordResetOtpRepository.findByEmail("user@example.com")).thenReturn(Optional.of(otpRecord));
+        when(passwordEncoder.matches("123456", "hashedOtp")).thenReturn(true);
+        when(jwtUtil.generatePasswordResetToken("user@example.com")).thenReturn("resetAuthToken");
+
+        String token = adminAuthService.verifyPasswordResetOtp(request);
+
+        assertEquals("resetAuthToken", token);
+        verify(passwordResetOtpRepository).delete(otpRecord);
+    }
+
+    @Test
+    void verifyPasswordResetOtp_InvalidOtp_IncrementsAttempts() {
+        VerifyResetOtpRequest request = new VerifyResetOtpRequest("user@example.com", "999999");
+        PasswordResetOtp otpRecord = new PasswordResetOtp("user@example.com", "hashedOtp", LocalDateTime.now().plusMinutes(5), LocalDateTime.now());
+
+        when(passwordResetOtpRepository.findByEmail("user@example.com")).thenReturn(Optional.of(otpRecord));
+        when(passwordEncoder.matches("999999", "hashedOtp")).thenReturn(false);
+
+        assertThrows(InvalidOtpException.class, () -> adminAuthService.verifyPasswordResetOtp(request));
+        assertEquals(1, otpRecord.getFailedAttempts());
+        verify(passwordResetOtpRepository).save(otpRecord);
+    }
+
+    @Test
+    void resetPassword_ValidToken_UpdatesPassword() {
+        ResetPasswordRequest request = new ResetPasswordRequest("validToken", "NewPassword@123", "NewPassword@123");
+        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("user@example.com");
+
+        when(jwtUtil.validatePasswordResetToken("validToken")).thenReturn(claims);
+        User user = new User("Jane Doe", "user@example.com", "oldHash", "USER");
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewPassword@123")).thenReturn("newHashedPassword");
+
+        adminAuthService.resetPassword(request);
+
+        assertEquals("newHashedPassword", user.getPassword());
+        verify(userRepository).save(user);
     }
 }

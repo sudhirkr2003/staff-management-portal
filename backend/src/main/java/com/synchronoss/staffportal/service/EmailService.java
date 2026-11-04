@@ -30,4 +30,20 @@ public class EmailService {
             throw new EmailDeliveryException("Failed to send OTP email. Please ensure your email configuration is set up properly or try again later.", ex);
         }
     }
+
+    public void sendPasswordResetOtpEmail(String toEmail, String otp) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("Staff Management Portal - Password Reset OTP");
+            message.setText("Hello,\n\n"
+                    + "Your One-Time Password (OTP) for resetting your password is: " + otp + "\n\n"
+                    + "This OTP is valid for 5 minutes.\n"
+                    + "If you did not request a password reset, please disregard this email.\n\n"
+                    + "Regards,\nStaff Management Portal Team");
+            mailSender.send(message);
+        } catch (MailException ex) {
+            throw new EmailDeliveryException("Failed to send OTP email. Please ensure your email configuration is set up properly or try again later.", ex);
+        }
+    }
 }
