@@ -1,0 +1,7 @@
+package com.synchronoss.staffportal.exception;
+
+public class InvalidOtpException extends RuntimeException {
+    public InvalidOtpException(String message) {
+        super(message);
+    }
+}
