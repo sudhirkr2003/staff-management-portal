@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { registerAdmin } from '../services/authService';
 
 const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
@@ -9,6 +9,9 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
     password: '',
     confirmPassword: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
@@ -137,7 +140,7 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
   };
 
   return (
-    <div className="card-container registration-card">
+    <div className="card-container auth-card registration-card">
       <div className="card-header auth-header">
         <h1 className="card-title auth-title">Admin Registration</h1>
       </div>
@@ -198,50 +201,68 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
           {fieldErrors.email && <p className="error-text compact-error">{fieldErrors.email}</p>}
         </div>
 
-        <div className="form-row">
-          <div className="form-group compact-group">
-            <label htmlFor="reg-password" className="form-label compact-label">
-              Password
-            </label>
-            <div className="input-wrapper">
-              <Lock size={16} className="input-icon" />
-              <input
-                type="password"
-                id="reg-password"
-                name="password"
-                placeholder="Enter Your Password"
-                value={formData.password}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                disabled={isSubmitting}
-                className={`form-input compact-input ${fieldErrors.password ? 'input-error' : ''}`}
-              />
-            </div>
-            {fieldErrors.password && <p className="error-text compact-error">{fieldErrors.password}</p>}
+        <div className="form-group compact-group">
+          <label htmlFor="reg-password" className="form-label compact-label">
+            Password
+          </label>
+          <div className="input-wrapper">
+            <Lock size={16} className="input-icon" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="reg-password"
+              name="password"
+              placeholder="Enter Your Password"
+              value={formData.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              disabled={isSubmitting}
+              className={`form-input compact-input has-toggle ${fieldErrors.password ? 'input-error' : ''}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="password-toggle-btn"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
+          {fieldErrors.password && <p className="error-text compact-error">{fieldErrors.password}</p>}
+        </div>
 
-          <div className="form-group compact-group">
-            <label htmlFor="reg-confirmPassword" className="form-label compact-label">
-              Confirm Password
-            </label>
-            <div className="input-wrapper">
-              <Lock size={16} className="input-icon" />
-              <input
-                type="password"
-                id="reg-confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm Your Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                disabled={isSubmitting}
-                className={`form-input compact-input ${fieldErrors.confirmPassword ? 'input-error' : ''}`}
-              />
-            </div>
-            {fieldErrors.confirmPassword && <p className="error-text compact-error">{fieldErrors.confirmPassword}</p>}
+        <div className="form-group compact-group">
+          <label htmlFor="reg-confirmPassword" className="form-label compact-label">
+            Confirm Password
+          </label>
+          <div className="input-wrapper">
+            <Lock size={16} className="input-icon" />
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              id="reg-confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm Your Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              disabled={isSubmitting}
+              className={`form-input compact-input has-toggle ${fieldErrors.confirmPassword ? 'input-error' : ''}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="password-toggle-btn"
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              title={showConfirmPassword ? 'Hide password' : 'Show password'}
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
+          {fieldErrors.confirmPassword && <p className="error-text compact-error">{fieldErrors.confirmPassword}</p>}
         </div>
 
         <button type="submit" disabled={isSubmitting} className="btn-primary compact-btn">
@@ -292,21 +313,12 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
             Already have an account?{' '}
             <button
               type="button"
-              onClick={() => onNavigate('LOGIN')}
+              onClick={() => onNavigate('/login')}
               className="footer-nav-link"
             >
               Login
             </button>
           </p>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('HOME')}
-            className="btn-back-home"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to Home</span>
-          </button>
         </div>
       </form>
     </div>

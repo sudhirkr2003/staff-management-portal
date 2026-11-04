@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, AlertCircle, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react';
 import { loginUser, completeGoogleRegistration } from '../services/authService';
 
 const LoginPage = ({
@@ -20,6 +20,9 @@ const LoginPage = ({
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showGooglePassword, setShowGooglePassword] = useState(false);
+  const [showGoogleConfirmPassword, setShowGoogleConfirmPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [googleFieldErrors, setGoogleFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState(initialError);
@@ -192,7 +195,7 @@ const LoginPage = ({
   };
 
   return (
-    <div className="card-container login-card">
+    <div className="card-container auth-card login-card">
       <div className="card-header auth-header">
         <h1 className="card-title auth-title">Login</h1>
         <p className="card-subtitle compact-subtitle">
@@ -282,7 +285,7 @@ const LoginPage = ({
             <div className="input-wrapper">
               <Lock size={16} className="input-icon" />
               <input
-                type="password"
+                type={showGooglePassword ? 'text' : 'password'}
                 id="reg-google-password"
                 name="password"
                 placeholder="Enter Your Password"
@@ -290,8 +293,18 @@ const LoginPage = ({
                 onChange={handleGoogleChange}
                 onBlur={handleGoogleBlur}
                 disabled={isSubmitting}
-                className={`form-input compact-input ${googleFieldErrors.password ? 'input-error' : ''}`}
+                className={`form-input compact-input has-toggle ${googleFieldErrors.password ? 'input-error' : ''}`}
               />
+              <button
+                type="button"
+                onClick={() => setShowGooglePassword((prev) => !prev)}
+                className="password-toggle-btn"
+                aria-label={showGooglePassword ? 'Hide password' : 'Show password'}
+                title={showGooglePassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showGooglePassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             {googleFieldErrors.password && <p className="error-text compact-error">{googleFieldErrors.password}</p>}
           </div>
@@ -303,7 +316,7 @@ const LoginPage = ({
             <div className="input-wrapper">
               <Lock size={16} className="input-icon" />
               <input
-                type="password"
+                type={showGoogleConfirmPassword ? 'text' : 'password'}
                 id="reg-google-confirmPassword"
                 name="confirmPassword"
                 placeholder="Confirm Your Password"
@@ -311,8 +324,18 @@ const LoginPage = ({
                 onChange={handleGoogleChange}
                 onBlur={handleGoogleBlur}
                 disabled={isSubmitting}
-                className={`form-input compact-input ${googleFieldErrors.confirmPassword ? 'input-error' : ''}`}
+                className={`form-input compact-input has-toggle ${googleFieldErrors.confirmPassword ? 'input-error' : ''}`}
               />
+              <button
+                type="button"
+                onClick={() => setShowGoogleConfirmPassword((prev) => !prev)}
+                className="password-toggle-btn"
+                aria-label={showGoogleConfirmPassword ? 'Hide password' : 'Show password'}
+                title={showGoogleConfirmPassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showGoogleConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             {googleFieldErrors.confirmPassword && <p className="error-text compact-error">{googleFieldErrors.confirmPassword}</p>}
           </div>
@@ -339,15 +362,6 @@ const LoginPage = ({
                 Back to Login
               </button>
             </p>
-
-            <button
-              type="button"
-              onClick={() => onNavigate('HOME')}
-              className="btn-back-home"
-            >
-              <ArrowLeft size={14} />
-              <span>Back to Home</span>
-            </button>
           </div>
         </form>
       ) : (
@@ -389,7 +403,7 @@ const LoginPage = ({
             <div className="input-wrapper">
               <Lock size={16} className="input-icon" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="login-password"
                 name="password"
                 placeholder="Enter Your Password"
@@ -397,8 +411,18 @@ const LoginPage = ({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 disabled={isSubmitting}
-                className={`form-input compact-input ${fieldErrors.password ? 'input-error' : ''}`}
+                className={`form-input compact-input has-toggle ${fieldErrors.password ? 'input-error' : ''}`}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="password-toggle-btn"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             {fieldErrors.password && <p className="error-text compact-error">{fieldErrors.password}</p>}
           </div>
@@ -452,21 +476,12 @@ const LoginPage = ({
               Don't have an account?{' '}
               <button
                 type="button"
-                onClick={() => onNavigate('REGISTER')}
+                onClick={() => onNavigate('/register')}
                 className="footer-nav-link"
               >
                 Sign Up
               </button>
             </p>
-
-            <button
-              type="button"
-              onClick={() => onNavigate('HOME')}
-              className="btn-back-home"
-            >
-              <ArrowLeft size={14} />
-              <span>Back to Home</span>
-            </button>
           </div>
         </form>
       )}

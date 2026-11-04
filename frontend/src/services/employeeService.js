@@ -10,3 +10,13 @@ export const getEmployees = async () => {
   return response.data;
 };
 
+export const getEmployeeById = async (id) => {
+  const response = await api.get(`/api/employees/${id}`);
+  return response.data;
+};
+
+export const updateEmployee = async (id, employeeData) => {
+  const response = await api.put(`/api/employees/${id}`, employeeData);
+  return response.data;
+};
+

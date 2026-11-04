@@ -41,7 +41,6 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
         <div className="emp-details-modal-header">
           <div className="emp-details-title-group">
             <h2 className="emp-details-modal-title">Employee Details</h2>
-            <p className="emp-details-modal-subtitle">Workforce personnel profile information</p>
           </div>
           <button
             type="button"

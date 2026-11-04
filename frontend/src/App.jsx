@@ -10,7 +10,7 @@ import CreateCompanyPage from './components/CreateCompanyPage';
 import NotFoundPage from './components/NotFoundPage';
 import { getStoredUser, getStoredToken, logoutUser, getProfile } from './services/authService';
 import { getMyCompany } from './services/companyService';
-import { Users, Loader2, AlertCircle } from 'lucide-react';
+import { Users, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import './App.css';
 
 const resolvePath = (target) => {
@@ -25,10 +25,13 @@ const resolvePath = (target) => {
       return '/login';
     case 'REGISTER':
     case '/register':
+    case 'SIGNUP':
+    case '/signup':
       return '/register';
     case 'CREATE_COMPANY':
     case '/create-company':
-      return '/create-company';
+    case '/company/create':
+      return '/company/create';
     case 'WELCOME':
     case 'DASHBOARD':
     case '/dashboard':
@@ -37,6 +40,9 @@ const resolvePath = (target) => {
     case 'MANAGE_EMPLOYEES':
     case '/employees':
       return '/employees';
+    case 'EMPLOYEES_NEW':
+    case '/employees/new':
+      return '/employees/new';
     case 'OTP_VERIFY':
     case '/verify-otp':
       return '/verify-otp';
@@ -51,10 +57,34 @@ const resolvePath = (target) => {
   }
 };
 
+const matchEmployeeId = (path) => {
+  const m = path.match(/^\/employees\/(\d+)$/);
+  return m ? m[1] : null;
+};
+
+const matchEmployeeEdit = (path) => {
+  const m = path.match(/^\/employees\/(\d+)\/edit$/);
+  return m ? m[1] : null;
+};
+
+const isProtectedPath = (path) => {
+  if (!path) return false;
+  if (
+    path === '/dashboard' ||
+    path === '/employees' ||
+    path === '/employees/new' ||
+    path === '/company' ||
+    path === '/company/create'
+  ) return true;
+  if (matchEmployeeId(path) || matchEmployeeEdit(path)) return true;
+  return false;
+};
+
 const App = () => {
   const [currentPath, setCurrentPath] = useState(() => {
     const p = window.location.pathname;
-    return p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+    const normalized = p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+    return normalized === '/signup' ? '/register' : normalized;
   });
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [currentUser, setCurrentUser] = useState(() => getStoredUser());
@@ -87,12 +117,22 @@ const App = () => {
         setCurrentCompany(companyData);
 
         if (response.data.role === 'ADMIN' && !companyData) {
-          if (targetPath === '/' || targetPath === '/login' || targetPath === '/dashboard' || targetPath === '/employees') {
-            window.history.replaceState({}, '', '/create-company');
-            setCurrentPath('/create-company');
+          if (
+            targetPath === '/' ||
+            targetPath === '/login' ||
+            targetPath === '/register' ||
+            targetPath === '/dashboard' ||
+            targetPath === '/employees' ||
+            targetPath === '/employees/new' ||
+            targetPath === '/company' ||
+            matchEmployeeId(targetPath) ||
+            matchEmployeeEdit(targetPath)
+          ) {
+            window.history.replaceState({}, '', '/company/create');
+            setCurrentPath('/company/create');
             return;
           }
-        } else if (targetPath === '/' || targetPath === '/login') {
+        } else if (targetPath === '/' || targetPath === '/login' || targetPath === '/register') {
           window.history.replaceState({}, '', '/dashboard');
           setCurrentPath('/dashboard');
         }
@@ -125,22 +165,24 @@ const App = () => {
   const navigateTo = useCallback((target, replace = false) => {
     let targetPath = resolvePath(target);
 
-    if (targetPath === '/login' && getStoredToken() && currentUser) {
-      targetPath = currentUser.role === 'ADMIN' && !currentCompany ? '/create-company' : '/dashboard';
+    if ((targetPath === '/login' || targetPath === '/register') && getStoredToken() && currentUser) {
+      targetPath = currentUser.role === 'ADMIN' && !currentCompany ? '/company/create' : '/dashboard';
     }
 
-    if ((targetPath === '/dashboard' || targetPath === '/employees') && !getStoredToken()) {
+    if (isProtectedPath(targetPath) && !getStoredToken()) {
       targetPath = '/home';
     }
 
-    if ((targetPath === '/dashboard' || targetPath === '/employees') && currentUser && currentUser.role === 'ADMIN' && !currentCompany) {
-      targetPath = '/create-company';
+    if (isProtectedPath(targetPath) && currentUser && currentUser.role === 'ADMIN' && !currentCompany) {
+      if (targetPath !== '/company/create') {
+        targetPath = '/company/create';
+      }
     }
 
     setLoginError('');
     setIsOAuthError(false);
     setLoginSuccessMessage('');
-    if (targetPath !== '/login') {
+    if (targetPath !== '/login' && targetPath !== '/register') {
       setGoogleRegData(null);
     }
 
@@ -156,7 +198,12 @@ const App = () => {
     const handlePopState = () => {
       const p = window.location.pathname;
       const normalized = p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
-      setCurrentPath(normalized);
+      if (normalized === '/signup') {
+        window.history.replaceState({}, '', '/register');
+        setCurrentPath('/register');
+      } else {
+        setCurrentPath(normalized);
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -215,9 +262,15 @@ const App = () => {
       return;
     }
 
-    const initialPath = window.location.pathname.length > 1 && window.location.pathname.endsWith('/')
+    let initialPath = window.location.pathname.length > 1 && window.location.pathname.endsWith('/')
       ? window.location.pathname.slice(0, -1)
       : window.location.pathname;
+
+    if (initialPath === '/signup') {
+      window.history.replaceState({}, document.title, '/register');
+      initialPath = '/register';
+      setCurrentPath('/register');
+    }
 
     const storedToken = getStoredToken();
     const storedUser = getStoredUser();
@@ -229,7 +282,7 @@ const App = () => {
       verifySession(storedToken, storedUser, initialPath);
     } else {
       setIsRestoringSession(false);
-      if (initialPath === '/' || initialPath === '/dashboard' || initialPath === '/employees' || initialPath === '/create-company') {
+      if (isProtectedPath(initialPath) || initialPath === '/' || initialPath === '/company/create') {
         window.history.replaceState({}, document.title, '/home');
         setCurrentPath('/home');
       }
@@ -312,7 +365,7 @@ const App = () => {
       setCurrentCompany(companyData);
 
       if (!companyData) {
-        navigateTo('/create-company');
+        navigateTo('/company/create');
       } else {
         navigateTo('/dashboard');
       }
@@ -367,7 +420,7 @@ const App = () => {
     );
   }
 
-  if (backendConnectionError && (!currentUser || currentPath === '/dashboard' || currentPath === '/' || currentPath === '/create-company')) {
+  if (backendConnectionError && (!currentUser || currentPath === '/dashboard' || currentPath === '/' || currentPath === '/company/create')) {
     return (
       <div className="session-loading-container">
         <div className="session-loading-card">
@@ -397,7 +450,7 @@ const App = () => {
     return <HomePage onNavigate={navigateTo} currentUser={currentUser} />;
   }
 
-  if (currentPath === '/create-company') {
+  if (currentPath === '/company/create') {
     if (!currentUser || !getStoredToken()) {
       window.history.replaceState({}, '', '/login');
       setCurrentPath('/login');
@@ -420,15 +473,21 @@ const App = () => {
     );
   }
 
-  if (currentPath === '/dashboard' || currentPath === '/employees') {
+  if (
+    currentPath === '/dashboard' ||
+    currentPath === '/employees' ||
+    currentPath === '/employees/new' ||
+    matchEmployeeId(currentPath) ||
+    matchEmployeeEdit(currentPath)
+  ) {
     if (!currentUser || !getStoredToken()) {
       window.history.replaceState({}, '', '/home');
       setCurrentPath('/home');
       return null;
     }
     if (currentUser.role === 'ADMIN' && !currentCompany) {
-      window.history.replaceState({}, '', '/create-company');
-      setCurrentPath('/create-company');
+      window.history.replaceState({}, '', '/company/create');
+      setCurrentPath('/company/create');
       return null;
     }
     return (
@@ -497,45 +556,59 @@ const App = () => {
       </header>
 
       <main className="app-main">
-        {currentPath === '/register' && (
-          <AdminRegisterForm
-            onOtpSent={handleOtpSent}
-            onNavigate={navigateTo}
-          />
-        )}
+        <div className="auth-page-container">
+          <div className="auth-back-nav">
+            <button
+              type="button"
+              onClick={() => navigateTo('/home')}
+              className="auth-back-link"
+              aria-label="Back to Home"
+            >
+              <ArrowLeft size={15} />
+              <span>Back to Home</span>
+            </button>
+          </div>
 
-        {currentPath === '/login' && (
-          <LoginPage
-            onLoginSuccess={handleLoginSuccess}
-            onNavigate={navigateTo}
-            initialError={loginError}
-            initialSuccess={loginSuccessMessage}
-            googleRegData={googleRegData}
-            onCancelGoogleReg={() => setGoogleRegData(null)}
-            onForgotPassword={() => handleOpenForgotPassword('')}
-            isOAuthError={isOAuthError}
-          />
-        )}
+          {currentPath === '/register' && (
+            <AdminRegisterForm
+              onOtpSent={handleOtpSent}
+              onNavigate={navigateTo}
+            />
+          )}
 
-        {currentPath === '/forgot-password' && (
-          <ForgotPassword
-            initialEmail={forgotPasswordEmail}
-            onSuccess={handleForgotPasswordSuccess}
-            onCancel={() => navigateTo('/login')}
-          />
-        )}
+          {currentPath === '/login' && (
+            <LoginPage
+              onLoginSuccess={handleLoginSuccess}
+              onNavigate={navigateTo}
+              initialError={loginError}
+              initialSuccess={loginSuccessMessage}
+              googleRegData={googleRegData}
+              onCancelGoogleReg={() => setGoogleRegData(null)}
+              onForgotPassword={() => handleOpenForgotPassword('')}
+              isOAuthError={isOAuthError}
+            />
+          )}
 
-        {currentPath === '/verify-otp' && (
-          <OtpVerification
-            email={registeredEmail}
-            onVerified={handleOtpVerified}
-            onBack={() => navigateTo('/register')}
-          />
-        )}
+          {currentPath === '/forgot-password' && (
+            <ForgotPassword
+              initialEmail={forgotPasswordEmail}
+              onSuccess={handleForgotPasswordSuccess}
+              onCancel={() => navigateTo('/login')}
+            />
+          )}
 
-        {currentPath === '/registration-success' && (
-          <RegistrationSuccess onProceedToLogin={handleProceedToLogin} />
-        )}
+          {currentPath === '/verify-otp' && (
+            <OtpVerification
+              email={registeredEmail}
+              onVerified={handleOtpVerified}
+              onBack={() => navigateTo('/register')}
+            />
+          )}
+
+          {currentPath === '/registration-success' && (
+            <RegistrationSuccess onProceedToLogin={handleProceedToLogin} />
+          )}
+        </div>
       </main>
 
       <footer className="app-footer">

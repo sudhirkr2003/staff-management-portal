@@ -52,7 +52,7 @@ const HomePage = ({ onNavigate, currentUser }) => {
               </button>
               <button
                 type="button"
-                onClick={() => onNavigate('REGISTER')}
+                onClick={() => onNavigate('/register')}
                 className="btn-nav-signup"
               >
                 <UserPlus size={16} />
@@ -85,7 +85,7 @@ const HomePage = ({ onNavigate, currentUser }) => {
               <>
                 <button
                   type="button"
-                  onClick={() => onNavigate('REGISTER')}
+                  onClick={() => onNavigate('/register')}
                   className="btn-hero-primary"
                 >
                   <span>Get Started</span>

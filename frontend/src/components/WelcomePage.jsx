@@ -4,7 +4,7 @@ import {
   Loader2, X, Users, Lock, ArrowLeft,
   UserPlus, Building2, Briefcase, Calendar, Phone,
   LayoutDashboard, TrendingUp, Plus, ArrowRight, Menu, LogOut,
-  Search, Eye, IndianRupee
+  Search, Eye, IndianRupee, Edit2
 } from 'lucide-react';
 import { updateProfile } from '../services/authService';
 import { createEmployee, getEmployees } from '../services/employeeService';
@@ -12,6 +12,18 @@ import { getMyCompany } from '../services/companyService';
 import ChangePasswordModal from './ChangePasswordModal';
 import ManageCompanyModal from './ManageCompanyModal';
 import EmployeeDetailsModal from './EmployeeDetailsModal';
+import EmployeeDetailPage from './EmployeeDetailPage';
+import EditEmployeePage from './EditEmployeePage';
+
+const matchEmployeeId = (path) => {
+  const m = path ? path.match(/^\/employees\/(\d+)$/) : null;
+  return m ? m[1] : null;
+};
+
+const matchEmployeeEdit = (path) => {
+  const m = path ? path.match(/^\/employees\/(\d+)\/edit$/) : null;
+  return m ? m[1] : null;
+};
 
 const formatINR = (amount, decimals = 0) => {
   const num = Number(amount) || 0;
@@ -41,7 +53,16 @@ const WelcomePage = ({
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState(null);
 
-  const activeTab = currentPath === '/employees' ? 'employees' : (currentPath === '/dashboard' ? 'dashboard' : localTab);
+  const empDetailId = matchEmployeeId(currentPath);
+  const empEditId = matchEmployeeEdit(currentPath);
+  const isAddEmployee = currentPath === '/employees/new';
+  const isEmployeeSection =
+    currentPath === '/employees' ||
+    isAddEmployee ||
+    Boolean(empDetailId) ||
+    Boolean(empEditId);
+
+  const activeTab = isEmployeeSection ? 'employees' : 'dashboard';
 
   const handleTabChange = (tab) => {
     setLocalTab(tab);
@@ -249,7 +270,11 @@ const WelcomePage = ({
     setEmployeeError('');
     setEmployeeSuccess('');
     setEmployeeFieldErrors({});
-    setIsAddEmployeeModalOpen(true);
+    if (onNavigate) {
+      onNavigate('/employees/new');
+    } else {
+      setIsAddEmployeeModalOpen(true);
+    }
   };
 
   const handleEmployeeInputChange = (e) => {
@@ -347,6 +372,9 @@ const WelcomePage = ({
         setTimeout(() => {
           setIsAddEmployeeModalOpen(false);
           setEmployeeSuccess('');
+          if (onNavigate) {
+            onNavigate('/employees');
+          }
         }, 1200);
       }
     } catch (err) {
@@ -489,15 +517,47 @@ const WelcomePage = ({
             >
               <Menu size={18} />
             </button>
-            <button
-              type="button"
-              onClick={onBackToHome}
-              className="link-sub-home"
-              aria-label="Back to Home"
-            >
-              <ArrowLeft size={15} />
-              <span>Home</span>
-            </button>
+            {empEditId ? (
+              <button
+                type="button"
+                onClick={() => onNavigate(`/employees/${empEditId}`)}
+                className="link-sub-home"
+                aria-label="Back to Employee Details"
+              >
+                <ArrowLeft size={15} />
+                <span>Back to Employee Details</span>
+              </button>
+            ) : empDetailId || isAddEmployee ? (
+              <button
+                type="button"
+                onClick={() => onNavigate('/employees')}
+                className="link-sub-home"
+                aria-label="Back to Employees"
+              >
+                <ArrowLeft size={15} />
+                <span>Back to Employees</span>
+              </button>
+            ) : activeTab === 'employees' && currentPath !== '/dashboard' ? (
+              <button
+                type="button"
+                onClick={() => handleTabChange('dashboard')}
+                className="link-sub-home"
+                aria-label="Back to Dashboard"
+              >
+                <ArrowLeft size={15} />
+                <span>Back to Dashboard</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onBackToHome}
+                className="link-sub-home"
+                aria-label="Back to Home"
+              >
+                <ArrowLeft size={15} />
+                <span>Home</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -559,7 +619,206 @@ const WelcomePage = ({
         )}
 
         <main className={`dashboard-main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
-          {activeTab === 'dashboard' ? (
+          {empEditId ? (
+            <EditEmployeePage employeeId={empEditId} onNavigate={onNavigate} />
+          ) : empDetailId ? (
+            <EmployeeDetailPage employeeId={empDetailId} onNavigate={onNavigate} />
+          ) : isAddEmployee ? (
+            <div className="edit-employee-page-wrapper">
+              <div className="edit-employee-card">
+                <div className="employee-modal-header">
+                  <div className="employee-modal-title-group">
+                    <h2 className="employee-modal-title">Add New Employee</h2>
+                    <p className="employee-modal-subtitle">Enter employee information to register them</p>
+                  </div>
+                </div>
+
+                {employeeSuccess && (
+                  <div className="alert alert-success compact-alert">
+                    <CheckCircle2 size={16} />
+                    <span>{employeeSuccess}</span>
+                  </div>
+                )}
+
+                {employeeError && (
+                  <div className="alert alert-error compact-alert">
+                    <AlertCircle size={16} />
+                    <span>{employeeError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleCreateEmployee} className="employee-modal-form" noValidate>
+                  <div className="employee-form-grid">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-fullName-view">Full Name</label>
+                      <div className="input-wrapper">
+                        <User size={16} className="input-icon" />
+                        <input
+                          type="text"
+                          id="emp-fullName-view"
+                          name="fullName"
+                          value={employeeForm.fullName}
+                          onChange={handleEmployeeInputChange}
+                          placeholder="e.g. John Doe"
+                          className={`form-input ${employeeFieldErrors.fullName ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.fullName && (
+                        <span className="field-error-text">{employeeFieldErrors.fullName}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-email-view">Email Address</label>
+                      <div className="input-wrapper">
+                        <Mail size={16} className="input-icon" />
+                        <input
+                          type="email"
+                          id="emp-email-view"
+                          name="email"
+                          value={employeeForm.email}
+                          onChange={handleEmployeeInputChange}
+                          placeholder="e.g. john.doe@example.com"
+                          className={`form-input ${employeeFieldErrors.email ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.email && (
+                        <span className="field-error-text">{employeeFieldErrors.email}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="employee-form-grid">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-phone-view">Phone Number</label>
+                      <div className="input-wrapper">
+                        <Phone size={16} className="input-icon" />
+                        <input
+                          type="tel"
+                          id="emp-phone-view"
+                          name="phone"
+                          value={employeeForm.phone}
+                          onChange={handleEmployeeInputChange}
+                          placeholder="e.g. +91 9876543210"
+                          className={`form-input ${employeeFieldErrors.phone ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.phone && (
+                        <span className="field-error-text">{employeeFieldErrors.phone}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-department-view">Department</label>
+                      <div className="input-wrapper">
+                        <Building2 size={16} className="input-icon" />
+                        <input
+                          type="text"
+                          id="emp-department-view"
+                          name="department"
+                          value={employeeForm.department}
+                          onChange={handleEmployeeInputChange}
+                          placeholder="e.g. Engineering"
+                          className={`form-input ${employeeFieldErrors.department ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.department && (
+                        <span className="field-error-text">{employeeFieldErrors.department}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="employee-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-designation-view">Designation</label>
+                      <div className="input-wrapper">
+                        <Briefcase size={16} className="input-icon" />
+                        <input
+                          type="text"
+                          id="emp-designation-view"
+                          name="designation"
+                          value={employeeForm.designation}
+                          onChange={handleEmployeeInputChange}
+                          placeholder="e.g. Software Engineer"
+                          className={`form-input ${employeeFieldErrors.designation ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.designation && (
+                        <span className="field-error-text">{employeeFieldErrors.designation}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-salary-view">Salary (₹)</label>
+                      <div className="input-wrapper">
+                        <IndianRupee size={16} className="input-icon" />
+                        <input
+                          type="number"
+                          id="emp-salary-view"
+                          name="salary"
+                          step="0.01"
+                          min="0.01"
+                          value={employeeForm.salary}
+                          onChange={handleEmployeeInputChange}
+                          placeholder="e.g. 75000"
+                          className={`form-input ${employeeFieldErrors.salary ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.salary && (
+                        <span className="field-error-text">{employeeFieldErrors.salary}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="emp-joiningDate-view">Joining Date</label>
+                      <div className="input-wrapper">
+                        <Calendar size={16} className="input-icon" />
+                        <input
+                          type="date"
+                          id="emp-joiningDate-view"
+                          name="joiningDate"
+                          value={employeeForm.joiningDate}
+                          onChange={handleEmployeeInputChange}
+                          className={`form-input ${employeeFieldErrors.joiningDate ? 'input-error' : ''}`}
+                        />
+                      </div>
+                      {employeeFieldErrors.joiningDate && (
+                        <span className="field-error-text">{employeeFieldErrors.joiningDate}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="employee-modal-footer">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('/employees')}
+                      className="btn-profile-cancel"
+                      disabled={isSubmittingEmployee}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingEmployee}
+                      className="btn-profile-save"
+                    >
+                      {isSubmittingEmployee ? (
+                        <>
+                          <Loader2 size={16} className="spinner" />
+                          <span>Saving Employee...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus size={16} />
+                          <span>Save Employee</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          ) : activeTab === 'dashboard' ? (
             <>
               <div className="dashboard-content-header">
                 <h1 className="content-title">
@@ -780,15 +1039,6 @@ const WelcomePage = ({
             <div className="manage-employees-view">
               <div className="dashboard-content-header manage-employees-header">
                 <div className="content-title-wrapper">
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange('dashboard')}
-                    className="link-back-dashboard"
-                    aria-label="Back to Dashboard"
-                  >
-                    <ArrowLeft size={15} />
-                    <span>Back to Dashboard</span>
-                  </button>
                   <h1 className="content-title">Manage Employees</h1>
                 </div>
                 <button
@@ -907,15 +1157,26 @@ const WelcomePage = ({
                           </td>
                           <td>{emp.joiningDate}</td>
                           <td style={{ textAlign: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedEmployeeForDetails(emp)}
-                              className="btn-table-action-details"
-                              title="View Details"
-                            >
-                              <Eye size={14} />
-                              <span>View Details</span>
-                            </button>
+                            <div className="table-action-group">
+                              <button
+                                type="button"
+                                onClick={() => onNavigate(`/employees/${emp.id}`)}
+                                className="btn-table-action-details"
+                                title="View Details"
+                                aria-label="View Details"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onNavigate(`/employees/${emp.id}/edit`)}
+                                className="btn-table-action-edit"
+                                title="Edit Employee"
+                                aria-label="Edit Employee"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
