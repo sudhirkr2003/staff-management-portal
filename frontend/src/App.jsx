@@ -610,6 +610,7 @@ const App = () => {
 
           {currentPath === '/register' && (
             <AdminRegisterForm
+              onRegisterSuccess={() => navigateTo('/registration-success')}
               onOtpSent={handleOtpSent}
               onNavigate={navigateTo}
             />

@@ -71,39 +71,21 @@ public class AdminAuthService {
             throw new PasswordMismatchException("Password is not matching.");
         }
 
-        if (userRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new EmailAlreadyExistsException("An account with this email address already exists");
         }
 
-        String normalizedEmail = request.getEmail().trim().toLowerCase();
-        String generatedOtp = generateSecureOtp();
-        String hashedOtp = passwordEncoder.encode(generatedOtp);
         String hashedPassword = passwordEncoder.encode(request.getPassword());
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiry = now.plusMinutes(5);
-
-        PendingRegistration pendingRegistration = pendingRegistrationRepository
-                .findByEmail(normalizedEmail)
-                .orElseGet(() -> new PendingRegistration(
-                        request.getFullName().trim(),
-                        normalizedEmail,
-                        hashedPassword,
-                        hashedOtp,
-                        expiry,
-                        now
-                ));
-
-        pendingRegistration.setFullName(request.getFullName().trim());
-        pendingRegistration.setEmail(normalizedEmail);
-        pendingRegistration.setPasswordHash(hashedPassword);
-        pendingRegistration.setOtpHash(hashedOtp);
-        pendingRegistration.setOtpExpiry(expiry);
-        pendingRegistration.setFailedAttempts(0);
-        pendingRegistration.setLastOtpSentAt(now);
-
-        pendingRegistrationRepository.save(pendingRegistration);
-
-        emailService.sendOtpEmail(normalizedEmail, generatedOtp);
+        User adminUser = new User(
+                request.getFullName().trim(),
+                normalizedEmail,
+                hashedPassword,
+                "ADMIN"
+        );
+        adminUser.setAuthProvider("LOCAL");
+        adminUser.setEmailVerified(true);
+        userRepository.save(adminUser);
     }
 
     @Transactional
@@ -377,11 +359,18 @@ public class AdminAuthService {
             throw new PasswordMismatchException("Password is not matching.");
         }
 
-        Claims claims = jwtUtil.validatePasswordResetToken(request.getResetToken());
-        String email = claims.getSubject().toLowerCase().trim();
+        String email;
+        if (request.getResetToken() != null && !request.getResetToken().isBlank()) {
+            Claims claims = jwtUtil.validatePasswordResetToken(request.getResetToken());
+            email = claims.getSubject().toLowerCase().trim();
+        } else if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            email = request.getEmail().toLowerCase().trim();
+        } else {
+            throw new IllegalArgumentException("Email address or reset token is required");
+        }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No account found with this email address"));
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         if ("GOOGLE".equals(user.getAuthProvider())) {

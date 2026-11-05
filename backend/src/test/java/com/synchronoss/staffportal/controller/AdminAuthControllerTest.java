@@ -68,7 +68,7 @@ class AdminAuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("OTP has been sent to your email address."))
+                .andExpect(jsonPath("$.message").value("Admin account registered successfully."))
                 .andExpect(jsonPath("$.data.email").value("admin@example.com"));
     }
 

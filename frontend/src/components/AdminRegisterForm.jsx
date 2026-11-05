@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User, Mail, Lock, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { registerAdmin } from '../services/authService';
 
-const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
+const AdminRegisterForm = ({ onRegisterSuccess, onOtpSent, onNavigate }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -117,7 +117,13 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
       });
 
       if (response.success) {
-        onOtpSent(formData.email.trim().toLowerCase());
+        if (onRegisterSuccess) {
+          onRegisterSuccess(formData.email.trim().toLowerCase());
+        } else if (onOtpSent) {
+          onOtpSent(formData.email.trim().toLowerCase());
+        } else {
+          onNavigate('/registration-success');
+        }
       }
     } catch (err) {
       if (err.response && err.response.data) {
@@ -269,10 +275,10 @@ const AdminRegisterForm = ({ onOtpSent, onNavigate }) => {
           {isSubmitting ? (
             <>
               <Loader2 size={16} className="spinner" />
-              <span>Sending OTP...</span>
+              <span>Registering...</span>
             </>
           ) : (
-            <span>Send OTP</span>
+            <span>Register</span>
           )}
         </button>
 

@@ -99,21 +99,20 @@ class AdminAuthServiceTest {
         );
 
         when(userRepository.existsByEmail("admin@example.com")).thenReturn(false);
-        when(pendingRegistrationRepository.findByEmail("admin@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("hashedValue");
+        when(passwordEncoder.encode("Password@123")).thenReturn("hashedValue");
 
         adminAuthService.registerAdmin(request);
 
-        ArgumentCaptor<PendingRegistration> captor = ArgumentCaptor.forClass(PendingRegistration.class);
-        verify(pendingRegistrationRepository).save(captor.capture());
-        PendingRegistration saved = captor.getValue();
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User saved = captor.getValue();
 
         assertEquals("Jane Doe", saved.getFullName());
         assertEquals("admin@example.com", saved.getEmail());
-        assertEquals("hashedValue", saved.getPasswordHash());
-        assertEquals(0, saved.getFailedAttempts());
-        assertNotNull(saved.getOtpExpiry());
-        verify(emailService, times(1)).sendOtpEmail(eq("admin@example.com"), anyString());
+        assertEquals("hashedValue", saved.getPassword());
+        assertEquals("ADMIN", saved.getRole());
+        assertEquals("LOCAL", saved.getAuthProvider());
+        assertTrue(saved.getEmailVerified());
     }
 
     @Test
@@ -127,7 +126,6 @@ class AdminAuthServiceTest {
 
         assertThrows(PasswordMismatchException.class, () -> adminAuthService.registerAdmin(request));
         verify(userRepository, never()).existsByEmail(anyString());
-        verify(emailService, never()).sendOtpEmail(anyString(), anyString());
     }
 
     @Test
@@ -142,25 +140,7 @@ class AdminAuthServiceTest {
         when(userRepository.existsByEmail("admin@example.com")).thenReturn(true);
 
         assertThrows(EmailAlreadyExistsException.class, () -> adminAuthService.registerAdmin(request));
-        verify(pendingRegistrationRepository, never()).save(any());
-        verify(emailService, never()).sendOtpEmail(anyString(), anyString());
-    }
-
-    @Test
-    void registerAdmin_EmailDeliveryFailure_ThrowsException() {
-        AdminRegistrationRequest request = new AdminRegistrationRequest(
-                "Jane Doe",
-                "admin@example.com",
-                "Password@123",
-                "Password@123"
-        );
-
-        when(userRepository.existsByEmail("admin@example.com")).thenReturn(false);
-        when(pendingRegistrationRepository.findByEmail("admin@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("hashedValue");
-        doThrow(new EmailDeliveryException("SMTP error")).when(emailService).sendOtpEmail(eq("admin@example.com"), anyString());
-
-        assertThrows(EmailDeliveryException.class, () -> adminAuthService.registerAdmin(request));
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -542,6 +522,19 @@ class AdminAuthServiceTest {
         when(claims.getSubject()).thenReturn("user@example.com");
 
         when(jwtUtil.validatePasswordResetToken("validToken")).thenReturn(claims);
+        User user = new User("Jane Doe", "user@example.com", "oldHash", "ADMIN");
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewPassword@123")).thenReturn("newHashedPassword");
+
+        adminAuthService.resetPassword(request);
+
+        assertEquals("newHashedPassword", user.getPassword());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void resetPassword_ValidEmail_UpdatesPassword() {
+        ResetPasswordRequest request = new ResetPasswordRequest("user@example.com", null, "NewPassword@123", "NewPassword@123");
         User user = new User("Jane Doe", "user@example.com", "oldHash", "ADMIN");
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.encode("NewPassword@123")).thenReturn("newHashedPassword");

@@ -5,8 +5,9 @@ import jakarta.validation.constraints.Pattern;
 
 public class ResetPasswordRequest {
 
-    @NotBlank(message = "Reset token is required")
     private String resetToken;
+
+    private String email;
 
     @NotBlank(message = "New password is required")
     @Pattern(
@@ -25,6 +26,21 @@ public class ResetPasswordRequest {
         this.resetToken = resetToken;
         this.newPassword = newPassword;
         this.confirmPassword = confirmPassword;
+    }
+
+    public ResetPasswordRequest(String email, String resetToken, String newPassword, String confirmPassword) {
+        this.email = email;
+        this.resetToken = resetToken;
+        this.newPassword = newPassword;
+        this.confirmPassword = confirmPassword;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getResetToken() {
@@ -51,4 +67,3 @@ public class ResetPasswordRequest {
         this.confirmPassword = confirmPassword;
     }
 }
-

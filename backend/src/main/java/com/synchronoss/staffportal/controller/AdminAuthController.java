@@ -46,7 +46,7 @@ public class AdminAuthController {
         adminAuthService.registerAdmin(request);
         ApiResponse<Map<String, String>> response = new ApiResponse<>(
                 true,
-                "OTP has been sent to your email address.",
+                "Admin account registered successfully.",
                 Collections.singletonMap("email", request.getEmail().trim().toLowerCase())
         );
         return ResponseEntity.status(HttpStatus.OK).body(response);
