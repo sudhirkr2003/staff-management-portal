@@ -42,12 +42,12 @@ public class AdminAuthController {
     }
 
     @PostMapping("/admin/register")
-    public ResponseEntity<ApiResponse<Map<String, String>>> registerAdmin(@Valid @RequestBody AdminRegistrationRequest request) {
-        adminAuthService.registerAdmin(request);
-        ApiResponse<Map<String, String>> response = new ApiResponse<>(
+    public ResponseEntity<ApiResponse<LoginResponse>> registerAdmin(@Valid @RequestBody AdminRegistrationRequest request) {
+        LoginResponse loginResponse = adminAuthService.registerAdmin(request);
+        ApiResponse<LoginResponse> response = new ApiResponse<>(
                 true,
                 "Admin account registered successfully.",
-                Collections.singletonMap("email", request.getEmail().trim().toLowerCase())
+                loginResponse
         );
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

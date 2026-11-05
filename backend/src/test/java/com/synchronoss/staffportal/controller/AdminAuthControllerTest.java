@@ -61,7 +61,7 @@ class AdminAuthControllerTest {
                 "Password@123",
                 "Password@123"
         );
-        doNothing().when(adminAuthService).registerAdmin(any(AdminRegistrationRequest.class));
+        when(adminAuthService.registerAdmin(any(AdminRegistrationRequest.class))).thenReturn(new LoginResponse("mockToken", 1L, "Jane Doe", "admin@example.com", "ADMIN"));
 
         mockMvc.perform(post("/api/auth/admin/register")
                         .contentType(MediaType.APPLICATION_JSON)

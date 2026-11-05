@@ -66,7 +66,7 @@ public class AdminAuthService {
     }
 
     @Transactional
-    public void registerAdmin(AdminRegistrationRequest request) {
+    public LoginResponse registerAdmin(AdminRegistrationRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new PasswordMismatchException("Password is not matching.");
         }
@@ -85,7 +85,16 @@ public class AdminAuthService {
         );
         adminUser.setAuthProvider("LOCAL");
         adminUser.setEmailVerified(true);
-        userRepository.save(adminUser);
+        User savedUser = userRepository.save(adminUser);
+
+        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getEmail(), "ADMIN");
+        return new LoginResponse(
+                token,
+                savedUser.getId(),
+                savedUser.getFullName(),
+                savedUser.getEmail(),
+                "ADMIN"
+        );
     }
 
     @Transactional

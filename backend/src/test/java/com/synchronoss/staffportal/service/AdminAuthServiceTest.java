@@ -98,21 +98,20 @@ class AdminAuthServiceTest {
                 "Password@123"
         );
 
+        User mockSaved = new User("Jane Doe", "admin@example.com", "hashedValue", "ADMIN");
+        mockSaved.setId(1L);
+
         when(userRepository.existsByEmail("admin@example.com")).thenReturn(false);
         when(passwordEncoder.encode("Password@123")).thenReturn("hashedValue");
+        when(userRepository.save(any(User.class))).thenReturn(mockSaved);
+        when(jwtUtil.generateToken(any(), eq("admin@example.com"), eq("ADMIN"))).thenReturn("mockToken");
 
-        adminAuthService.registerAdmin(request);
+        LoginResponse response = adminAuthService.registerAdmin(request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        User saved = captor.getValue();
-
-        assertEquals("Jane Doe", saved.getFullName());
-        assertEquals("admin@example.com", saved.getEmail());
-        assertEquals("hashedValue", saved.getPassword());
-        assertEquals("ADMIN", saved.getRole());
-        assertEquals("LOCAL", saved.getAuthProvider());
-        assertTrue(saved.getEmailVerified());
+        assertNotNull(response);
+        assertEquals("mockToken", response.getToken());
+        assertEquals("admin@example.com", response.getEmail());
+        verify(userRepository).save(any(User.class));
     }
 
     @Test

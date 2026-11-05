@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Mail, Lock, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
-import { registerAdmin } from '../services/authService';
+import { registerAdmin, loginUser } from '../services/authService';
 
 const AdminRegisterForm = ({ onRegisterSuccess, onOtpSent, onNavigate }) => {
   const [formData, setFormData] = useState({
@@ -117,10 +117,21 @@ const AdminRegisterForm = ({ onRegisterSuccess, onOtpSent, onNavigate }) => {
       });
 
       if (response.success) {
+        let authData = response.data;
+        if (!authData || !authData.token) {
+          try {
+            const loginRes = await loginUser({
+              email: formData.email.trim().toLowerCase(),
+              password: formData.password
+            });
+            if (loginRes && loginRes.data) {
+              authData = loginRes.data;
+            }
+          } catch (e) {
+          }
+        }
         if (onRegisterSuccess) {
-          onRegisterSuccess(formData.email.trim().toLowerCase());
-        } else if (onOtpSent) {
-          onOtpSent(formData.email.trim().toLowerCase());
+          onRegisterSuccess(authData);
         } else {
           onNavigate('/registration-success');
         }

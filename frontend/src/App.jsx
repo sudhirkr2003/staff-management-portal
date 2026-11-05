@@ -610,7 +610,12 @@ const App = () => {
 
           {currentPath === '/register' && (
             <AdminRegisterForm
-              onRegisterSuccess={() => navigateTo('/registration-success')}
+              onRegisterSuccess={(userData) => {
+                if (userData && userData.token) {
+                  setCurrentUser(userData);
+                }
+                navigateTo('/registration-success');
+              }}
               onOtpSent={handleOtpSent}
               onNavigate={navigateTo}
             />
@@ -646,7 +651,33 @@ const App = () => {
           )}
 
           {currentPath === '/registration-success' && (
-            <RegistrationSuccess onProceedToLogin={handleProceedToLogin} />
+            <RegistrationSuccess
+              onComplete={async () => {
+                const storedUser = getStoredUser();
+                const activeUser = storedUser || currentUser;
+                if (activeUser) {
+                  setCurrentUser(activeUser);
+                  let companyData = null;
+                  try {
+                    const compRes = await getMyCompany();
+                    if (compRes && compRes.success && compRes.data) {
+                      companyData = compRes.data;
+                    }
+                  } catch (e) {
+                  }
+                  setCurrentCompany(companyData);
+                  if (!companyData) {
+                    window.history.pushState({}, '', '/company/create');
+                    setCurrentPath('/company/create');
+                  } else {
+                    window.history.pushState({}, '', '/dashboard');
+                    setCurrentPath('/dashboard');
+                  }
+                } else {
+                  navigateTo('/login');
+                }
+              }}
+            />
           )}
         </div>
       </main>

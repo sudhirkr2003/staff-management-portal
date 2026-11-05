@@ -2,6 +2,10 @@ import api from './api';
 
 export const registerAdmin = async (registrationData) => {
   const response = await api.post('/api/auth/admin/register', registrationData);
+  if (response.data && response.data.data && response.data.data.token) {
+    localStorage.setItem('auth_token', response.data.data.token);
+    localStorage.setItem('auth_user', JSON.stringify(response.data.data));
+  }
   return response.data;
 };
 
