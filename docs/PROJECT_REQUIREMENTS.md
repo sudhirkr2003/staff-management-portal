@@ -355,13 +355,28 @@ Development must be strictly incremental, following an endpoint-by-endpoint life
 
 ## 10. Acceptance Criteria Checklist
 
-- [ ] New user registration functions with validation and BCrypt hashing.
-- [ ] Registered user can log in with Email and Password, receiving JWT.
-- [ ] User can sign in using Google OAuth 2.0 / OpenID Connect.
-- [ ] Users authenticating via either method access the identical Employee Dashboard.
-- [ ] Employee records can be created, retrieved, updated, and deleted.
-- [ ] Unauthenticated requests to protected endpoints return HTTP 401.
-- [ ] Logout invalidates client authentication state.
-- [ ] All data persists reliably in MySQL database.
-- [ ] All endpoints verified via Postman test suite.
+- [x] New user registration functions with validation and BCrypt hashing.
+- [x] Registered user can log in with Email and Password, receiving JWT.
+- [x] User can sign in using Google OAuth 2.0 / OpenID Connect.
+- [x] Users authenticating via either method access the identical Employee Dashboard.
+- [x] Employee records can be created, retrieved, updated, and deleted.
+- [x] Unauthenticated requests to protected endpoints return HTTP 401.
+- [x] Logout invalidates client authentication state.
+- [x] All data persists reliably in MySQL database.
+- [x] All endpoints verified via Postman test suite.
+
+---
+
+## 11. Live Production Deployment Information
+
+| Resource | Target / URL | Details |
+|---|---|---|
+| **Production Frontend** | [https://staff-btv0.onrender.com](https://staff-btv0.onrender.com) | Hosted on Render as a React SPA |
+| **Production Backend** | [https://staff-backend-mwuh.onrender.com](https://staff-backend-mwuh.onrender.com) | Multi-stage Docker Web Service on Render |
+| **Interactive Swagger UI** | [https://staff-backend-mwuh.onrender.com/swagger-ui/index.html](https://staff-backend-mwuh.onrender.com/swagger-ui/index.html) | OpenAPI 3.0 interactive documentation |
+| **OpenAPI Specification** | [https://staff-backend-mwuh.onrender.com/v3/api-docs](https://staff-backend-mwuh.onrender.com/v3/api-docs) | Raw OpenAPI JSON schema |
+| **Health Check Probe** | [https://staff-backend-mwuh.onrender.com/api/health](https://staff-backend-mwuh.onrender.com/api/health) | Public health probe (Status: UP) |
+| **Production Database** | Aiven MySQL Cloud (`defaultdb`) | Enforced SSL (`sslMode=REQUIRED`) |
+| **GitHub Repository** | [https://github.com/sudhirkr2003/staff-management-portal](https://github.com/sudhirkr2003/staff-management-portal) | Active repository |
+| **Git Branches** | `main`, `develop`, `main-otp` | `main-otp` preserves full email OTP flow |
 
