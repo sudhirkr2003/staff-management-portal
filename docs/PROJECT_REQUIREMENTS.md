@@ -98,11 +98,14 @@ Provides one-click sign-in using Google accounts via Google Cloud Platform OAuth
   3. Google redirects back to backend callback endpoint (`/login/oauth2/code/google`) with the authorization code.
   4. Backend exchanges authorization code for Google ID & Access tokens and validates signature, audience, issuer, expiration, and email verification status.
   5. Extract verified user profile details: `email`, `name`, and Google subject identifier (`sub` / `provider_user_id`).
-  6. **Account Resolution / Linking:**
-     - If user does not exist in `users`: Create new user record with `password = NULL` and link provider record in `user_oauth_accounts`.
-     - If user exists (matching verified email): Securely link Google identity into `user_oauth_accounts` if not already linked. Prevent duplicate accounts.
-     - Never link accounts automatically if email is unverified by Google.
-  7. Backend issues its own application JWT (never passes Google ID token as app session token).
+  6. **Account Resolution & Guided Registration Linking:**
+     - If user exists by email or Google ID: Automatically link Google identity (`google_id`), set `auth_provider = 'BOTH'`, ensure role is `ADMIN`, generate application JWT, and redirect to dashboard.
+     - If user does not exist in `users`: Generate a signed cryptographic `registrationToken` containing Google identity claims (`google_id`, `email`, `name`) and redirect to `/login` with `status=google_register&regToken=...`.
+     - Frontend transitions to registration completion mode displaying the prominent red warning:
+       > **"Your Google account is not registered. Create a password to complete your registration."**
+     - The administrator sets and confirms a compliant password, submitting to `POST /api/auth/google/complete-registration`.
+     - Upon submission, the account is fully provisioned in MySQL with role `ADMIN` and `auth_provider = 'BOTH'`, returning an active JWT session.
+  7. Backend issues its own application JWT (never passes raw Google ID token as app session token).
   8. Redirect user to the unified Employee Dashboard.
 
 - **Google Cloud Platform Configuration Requirements:**

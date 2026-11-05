@@ -30,14 +30,15 @@ An enterprise-grade workforce management platform built with Spring Boot 3, Reac
 
 ## Core Capabilities
 
-- **Direct Administrator Registration:** Instant account creation with password hashing and automated session initialization.
+- **Dual-Gateway Multi-Login:** Full support for both standard credentials (Email & BCrypt-hashed password) and Google OAuth 2.0 / OpenID Connect single-click sign-in.
+- **Guided Google Registration & Account Linking:** Seamlessly links existing Google accounts. For first-time Google users, displays a prominent red warning banner (*"Your Google account is not registered. Create a password to complete your registration."*) and guides them to establish password credentials.
+- **Direct Administrator Registration:** Instant account creation with password hashing and automated session initialization (no external SMTP dependencies).
 - **Automated Workspace Onboarding:** Success confirmation automatically routes new administrators to company setup after 2 seconds.
-- **Company Workspace Isolation:** Multi-tenant architecture ensuring each organization's data remains isolated.
-- **Employee Lifecycle Management:** Full CRUD operations covering employee records, salaries, designations, contact info, and departments.
+- **Company Workspace Isolation:** Multi-tenant architecture ensuring each organization's employee records and department metrics remain strictly isolated.
+- **Employee Lifecycle Management:** Full CRUD operations covering employee profiles, salaries, designations, corporate emails, and departments.
 - **Department Distribution Analytics:** Real-time headcount and workforce allocation statistics.
-- **Dual Authentication Gateway:** Standard credentials with BCrypt encryption plus Google OAuth 2.0 / OpenID Connect.
-- **OpenAPI 3.0 / Swagger UI:** Auto-generated interactive documentation with Bearer JWT authentication support.
-- **Automated Health Monitoring:** `/api/health` endpoint integrated for container keep-alive monitoring.
+- **OpenAPI 3.0 / Swagger UI:** Auto-generated interactive documentation with Bearer JWT authentication support, resolving dynamically across local and production environments.
+- **Automated Health Monitoring:** `/api/health` keep-alive endpoint integrated for 5-minute uptime monitoring.
 
 ---
 
@@ -116,6 +117,7 @@ npm run dev
 
 ## Documentation Deliverables
 
-- **Technical Specification (HTML):** `docs/Staff_Management_Portal_Technical_Specification.html`
-- **Technical Specification (PDF):** `Staff_Management_Portal_Technical_Specification.pdf` and `docs/Staff_Management_Portal_Technical_Specification.pdf`
-- **Software Requirements Specification (SRS):** `docs/PROJECT_REQUIREMENTS.md`
+- **6-Page Technical Specification (PDF):** [`Staff_Management_Portal_Technical_Specification.pdf`](Staff_Management_Portal_Technical_Specification.pdf) and [`docs/Staff_Management_Portal_Technical_Specification.pdf`](docs/Staff_Management_Portal_Technical_Specification.pdf) — Complete 6-page enterprise engineering specification focusing on the dual-gateway multi-login architecture, Google OAuth 2.0 / OpenID Connect flow, account linking, unlinked red notification, user onboarding lifecycle, tenant isolation, and cloud infrastructure.
+- **Interactive Technical Specification (HTML):** [`docs/Staff_Management_Portal_Technical_Specification.html`](docs/Staff_Management_Portal_Technical_Specification.html) — Modern, beautifully typeset web specification corresponding directly to the 6-page architecture document.
+- **Software Requirements Specification (SRS):** [`docs/PROJECT_REQUIREMENTS.md`](docs/PROJECT_REQUIREMENTS.md) — Comprehensive functional requirements, acceptance criteria, and live deployment matrix.
+

@@ -1,671 +1,714 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Staff Management Portal – Technical Specification & System Architecture</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #1e293b;
-      background: #f8fafc;
-      line-height: 1.6;
-      padding: 40px 20px;
-    }
-    .page-container {
-      max-width: 960px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 48px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-      border: 1px solid #e2e8f0;
-    }
-    .doc-badge {
-      display: inline-block;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
-      padding: 4px 12px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      border-radius: 6px;
-      margin-bottom: 16px;
-    }
-    h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: -0.02em;
-      margin-bottom: 12px;
-      line-height: 1.2;
-    }
-    .lead {
-      font-size: 1.05rem;
-      color: #475569;
-      margin-bottom: 24px;
-      line-height: 1.5;
-    }
-    h2 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin-top: 36px;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #e2e8f0;
-    }
-    h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin-top: 20px;
-      margin-bottom: 10px;
-    }
-    p, li {
-      font-size: 0.9rem;
-      color: #334155;
-    }
-    ul {
-      padding-left: 20px;
-      margin-bottom: 16px;
-    }
-    li {
-      margin-bottom: 6px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 18px 0 24px 0;
-      font-size: 0.82rem;
-    }
-    th, td {
-      padding: 10px 14px;
-      border: 1px solid #cbd5e1;
-      text-align: left;
-    }
-    th {
-      background-color: #f1f5f9;
-      color: #0f172a;
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
-    }
-    td {
-      color: #334155;
-    }
-    tr:nth-child(even) td {
-      background-color: #f8fafc;
-    }
-    code {
-      font-family: 'JetBrains Mono', monospace;
-      background: #f1f5f9;
-      color: #2563eb;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.82rem;
-    }
-    pre {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 16px;
-      border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
-      overflow-x: auto;
-      margin: 16px 0;
-      line-height: 1.45;
-    }
-    .callout {
-      background: #eff6ff;
-      border-left: 4px solid #2563eb;
-      padding: 14px 18px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-      font-size: 0.86rem;
-      color: #1e40af;
-    }
-    .callout-success {
-      background: #f0fdf4;
-      border-left: 4px solid #10b981;
-      padding: 14px 18px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-      font-size: 0.86rem;
-      color: #065f46;
-    }
-    .badge-method {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
-    .method-get { background: #dbeafe; color: #1e40af; }
-    .method-post { background: #dcfce7; color: #166534; }
-    .method-put { background: #fef3c7; color: #92400e; }
-    .method-delete { background: #fee2e2; color: #991b1b; }
-    a {
-      color: #2563eb;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    @media print {
-      body {
-        background: #ffffff;
-        padding: 0;
-      }
-      .page-container {
-        box-shadow: none;
-        border: none;
-        padding: 24px 20px;
-        max-width: 100%;
-      }
-      h2 {
-        page-break-after: avoid;
-      }
-      table, pre {
-        page-break-inside: avoid;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<div class="page-container">
-  <div class="doc-badge">Technical Specification & System Architecture</div>
-  <h1>Staff Management Portal – Enterprise Workforce Platform</h1>
-  <p class="lead">
-    Comprehensive engineering report covering full-stack system architecture, company-isolated workspace tenancy, dual-provider authentication (JWT + Google OAuth 2.0 / OIDC), Administrator role-based access control (Admin RBAC), relational database schemas, automated role migration, and interactive OpenAPI / Swagger 3.0 specification.
-  </p>
-
-  <table>
-    <tr>
-      <th>Author / Candidate</th>
-      <td>Sudhir Kumar (GitHub: <a href="https://github.com/sudhirkr2003" target="_blank">sudhirkr2003</a>)</td>
-      <th>GitHub Repository</th>
-      <td><a href="https://github.com/sudhirkr2003/staff-management-portal" target="_blank">staff-management-portal</a></td>
-    </tr>
-    <tr>
-      <th>Live Frontend UI</th>
-      <td><a href="https://staff-btv0.onrender.com" target="_blank">https://staff-btv0.onrender.com</a></td>
-      <th>Live Backend API</th>
-      <td><a href="https://staff-backend-mwuh.onrender.com" target="_blank">https://staff-backend-mwuh.onrender.com</a></td>
-    </tr>
-    <tr>
-      <th>Interactive Swagger UI</th>
-      <td><a href="https://staff-backend-mwuh.onrender.com/swagger-ui/index.html" target="_blank">Swagger UI (Production Interactive Docs)</a></td>
-      <th>OpenAPI 3.0 JSON Docs</th>
-      <td><a href="https://staff-backend-mwuh.onrender.com/v3/api-docs" target="_blank">/v3/api-docs</a></td>
-    </tr>
-    <tr>
-      <th>Production Health Check</th>
-      <td><a href="https://staff-backend-mwuh.onrender.com/api/health" target="_blank">/api/health</a> (200 OK Status: UP)</td>
-      <th>Cloud Database</th>
-      <td>Aiven MySQL (Database: <code>defaultdb</code>, SSL: REQUIRED)</td>
-    </tr>
-    <tr>
-      <th>Active Deployment Branches</th>
-      <td><code>main</code> (Production), <code>develop</code> (Active Dev)</td>
-      <th>Preserved Feature Branch</th>
-      <td><code>main-otp</code> (Dedicated Email OTP Authentication)</td>
-    </tr>
-    <tr>
-      <th>Technology Stack</th>
-      <td>Spring Boot 3.3.5 (Java 17) + React 18 (Vite) + MySQL 8.0 + Spring Security 6</td>
-      <th>Specification Date</th>
-      <td>05 November 2026</td>
-    </tr>
-  </table>
-
-  <h2>1. Project Overview & Core Capabilities</h2>
-  <p>
-    The <strong>Staff Management Portal</strong> is a high-performance enterprise employee administration and organizational workforce platform. Built with a clean separation of concerns, the system enables corporate administrators to register their organization, establish an isolated company workspace, and manage employee records throughout their entire employment lifecycle.
-  </p>
-
-  <h3>1.1 Architectural Pillars</h3>
-  <ul>
-    <li><strong>Strict Admin Tenancy (1 Admin = 1 Company = All Employees)</strong>: Each unique email registration establishes an independent Administrator account. Every administrator owns exactly one company workspace, and all employee records belong exclusively to that company. Strict backend ownership checks prevent cross-tenant data leakage.</li>
-    <li><strong>Dual-Provider Secure Authentication</strong>: Integrated support for email/password registration backed by 6-digit cryptographic OTP delivery, along with Google OAuth 2.0 / OpenID Connect Single Sign-On (SSO). Both authentication flows automatically provision authenticated accounts with the <code>ADMIN</code> role.</li>
-    <li><strong>Full-Lifecycle Employee CRUD</strong>: Comprehensive employee management supporting creation, profile viewing, multi-attribute updates, salary adjustment, department reassignment, and safe record deletion with confirmation modals.</li>
-    <li><strong>Real-Time Workforce Analytics & Telemetry</strong>: Instant telemetry on total employee headcount, active company departments, overall payroll expenditure, average salary benchmarks, and department staff distribution.</li>
-    <li><strong>Continuous Availability & Keep-Alive Diagnostics</strong>: Dedicated public <code>/api/health</code> endpoint returning service status and ISO timestamps, optimized for continuous cloud monitoring via UptimeRobot to eliminate cold-start delays on cloud containers.</li>
-    <li><strong>Interactive Swagger / OpenAPI 3.0 Documentation</strong>: Native interactive API explorer supporting live execution and Bearer JWT authorization testing.</li>
-  </ul>
-
-  <h2>2. Tech Stack & Architectural Decisions</h2>
-  <table>
-    <tr>
-      <th>Architectural Layer</th>
-      <th>Technology Selected</th>
-      <th>Decision Rationale & Benefits</th>
-    </tr>
-    <tr>
-      <td><strong>Backend Runtime</strong></td>
-      <td>Spring Boot 3.3.5 (Java 17 LTS)</td>
-      <td>Modern Java LTS runtime, strong type safety, declarative transaction management (<code>@Transactional</code>), fast startup, and native JPA persistence.</td>
-    </tr>
-    <tr>
-      <td><strong>API Documentation</strong></td>
-      <td>Springdoc OpenAPI 2.6.0 (Swagger 3)</td>
-      <td>Auto-generates OpenAPI 3.0 schema and rich interactive Swagger UI supporting Bearer JWT authentication for testing protected endpoints.</td>
-    </tr>
-    <tr>
-      <td><strong>Frontend Client</strong></td>
-      <td>React 18 + Vite 5.4 + Vanilla CSS</td>
-      <td>Ultra-fast hot module replacement (HMR), sub-second build times, modular component tree, lightweight bundle (&lt; 350 KB), zero runtime CSS overhead.</td>
-    </tr>
-    <tr>
-      <td><strong>Database Engine</strong></td>
-      <td>MySQL 8.0 Relational DB</td>
-      <td>Industry-standard relational persistence, ACID guarantees, foreign key integrity constraints, and indexed unique lookups.</td>
-    </tr>
-    <tr>
-      <td><strong>Security Framework</strong></td>
-      <td>Spring Security 6.x + Stateless JWT</td>
-      <td>Stateless HMAC-SHA256 token verification, BCrypt password hashing (cost factor 10), OAuth2 authorization code grant client, and fine-grained endpoint matchers.</td>
-    </tr>
-    <tr>
-      <td><strong>Email Delivery</strong></td>
-      <td>Spring Boot Starter Mail (JavaMailSender)</td>
-      <td>Asynchronous delivery of time-limited 6-digit OTP verification codes for new registrations and password recovery.</td>
-    </tr>
-    <tr>
-      <td><strong>Health Monitoring</strong></td>
-      <td>UptimeRobot + Custom <code>/api/health</code></td>
-      <td>Automated 5-minute health probe preventing idle cloud container spin-down and ensuring 100% uptime.</td>
-    </tr>
-  </table>
-
-  <h2>3. Relational Database Schema & Data Models</h2>
-  <table>
-    <tr>
-      <th>Table Name</th>
-      <th>Primary Attributes & Types</th>
-      <th>Constraints, Relations & Indices</th>
-    </tr>
-    <tr>
-      <td><code>users</code></td>
-      <td><code>id</code> (BIGINT PK, AI), <code>full_name</code> (VARCHAR 150), <code>email</code> (VARCHAR 150), <code>password</code> (VARCHAR 255), <code>role</code> (VARCHAR 50), <code>google_id</code> (VARCHAR 100), <code>auth_provider</code> (VARCHAR 20), <code>email_verified</code> (BOOLEAN), <code>created_at</code>, <code>updated_at</code></td>
-      <td>Primary administrator entity. <code>UNIQUE(email)</code>, <code>UNIQUE(google_id)</code>. Role enforced as <code>ADMIN</code> via JPA <code>@PrePersist</code> and <code>@PreUpdate</code> lifecycle listeners.</td>
-    </tr>
-    <tr>
-      <td><code>companies</code></td>
-      <td><code>id</code> (BIGINT PK, AI), <code>name</code> (VARCHAR 150), <code>industry</code> (VARCHAR 100), <code>business_email</code> (VARCHAR 150), <code>contact_phone</code> (VARCHAR 30), <code>website</code> (VARCHAR 255), <code>owner_id</code> (BIGINT FK), <code>created_at</code>, <code>updated_at</code></td>
-      <td>Company workspace entity. <code>UNIQUE(owner_id)</code> enforces strictly 1 company per administrator. Foreign key referencing <code>users(id)</code>.</td>
-    </tr>
-    <tr>
-      <td><code>employees</code></td>
-      <td><code>id</code> (BIGINT PK, AI), <code>full_name</code> (VARCHAR 150), <code>email</code> (VARCHAR 150), <code>phone</code> (VARCHAR 30), <code>department</code> (VARCHAR 100), <code>designation</code> (VARCHAR 100), <code>salary</code> (DECIMAL 12,2), <code>joining_date</code> (DATE), <code>company_id</code> (BIGINT FK), <code>user_id</code> (BIGINT), <code>created_at</code>, <code>updated_at</code></td>
-      <td>Employee records. <code>FK(company_id) &rarr; companies(id)</code>. Multi-attribute isolation ensuring queries filter by <code>company_id</code> matching the authenticated admin.</td>
-    </tr>
-    <tr>
-      <td><code>pending_registrations</code></td>
-      <td><code>id</code> (BIGINT PK, AI), <code>email</code> (VARCHAR 150), <code>full_name</code> (VARCHAR 150), <code>password</code> (VARCHAR 255), <code>otp_hash</code> (VARCHAR 255), <code>expires_at</code> (DATETIME), <code>resend_available_at</code> (DATETIME), <code>attempts</code> (INT), <code>created_at</code></td>
-      <td>Staging store for unverified registrations. <code>UNIQUE(email)</code>. OTPs hashed with BCrypt. Expired after 10 minutes.</td>
-    </tr>
-    <tr>
-      <td><code>password_reset_otps</code></td>
-      <td><code>id</code> (BIGINT PK, AI), <code>email</code> (VARCHAR 150), <code>otp_hash</code> (VARCHAR 255), <code>expires_at</code> (DATETIME), <code>failed_attempts</code> (INT), <code>created_at</code></td>
-      <td>Secure OTP repository for forgotten password recovery. <code>UNIQUE(email)</code>. Enforces max attempt thresholds and cooldown timers.</td>
-    </tr>
-  </table>
-
-  <h2>4. Role-Based Access Control (RBAC) & Tenancy Isolation</h2>
-  <p>
-    The application follows an <strong>Admin-Only Single-Tenant Workspace Architecture</strong>. All end-users interacting with the portal are Administrators who manage their respective organizational silos. Regular employees do not log into the administrative portal, guaranteeing that privileged payroll and personnel data remain confidential.
-  </p>
-
-  <table>
-    <tr>
-      <th>Operational Action</th>
-      <th>Unauthenticated Public</th>
-      <th>Authenticated Administrator</th>
-      <th>Cross-Tenant Admin</th>
-      <th>Enforcement Mechanism</th>
-    </tr>
-    <tr>
-      <td>Register Admin & Request OTP</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td>N/A</td>
-      <td><code>/api/auth/admin/register</code> (Public permitAll)</td>
-    </tr>
-    <tr>
-      <td>Verify OTP & Create Account</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td>N/A</td>
-      <td>Validates OTP hash, provisions <code>ADMIN</code> role</td>
-    </tr>
-    <tr>
-      <td>Google OAuth SSO Sign-In</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td>N/A</td>
-      <td>Spring Security OAuth2 Callback & Token Issuer</td>
-    </tr>
-    <tr>
-      <td>Create Company Workspace</td>
-      <td>Deny (401)</td>
-      <td>Allowed (Single Creation)</td>
-      <td>Deny (Already Created)</td>
-      <td><code>CompanyService.createCompany()</code> enforces 1 company per user</td>
-    </tr>
-    <tr>
-      <td>View / Update Own Company</td>
-      <td>Deny (401)</td>
-      <td>Full Access</td>
-      <td>Deny (403)</td>
-      <td>Ownership check against authenticated JWT Principal</td>
-    </tr>
-    <tr>
-      <td>Employee List, Search & Filter</td>
-      <td>Deny (401)</td>
-      <td>Own Company Records</td>
-      <td>Strictly Filtered</td>
-      <td><code>employeeRepository.findByCompanyId(adminCompany.getId())</code></td>
-    </tr>
-    <tr>
-      <td>Add / Update Employee Record</td>
-      <td>Deny (401)</td>
-      <td>Allowed</td>
-      <td>Deny (403)</td>
-      <td><code>verifyEmployeeOwnership()</code> throws <code>ForbiddenOperationException</code></td>
-    </tr>
-    <tr>
-      <td>Delete Employee Record</td>
-      <td>Deny (401)</td>
-      <td>Allowed (Admin Only)</td>
-      <td>Deny (403)</td>
-      <td><code>validateAdmin(principal)</code> + Ownership Verification</td>
-    </tr>
-    <tr>
-      <td>Swagger UI & OpenAPI Docs</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td><code>/swagger-ui/**</code> & <code>/v3/api-docs/**</code> (permitAll)</td>
-    </tr>
-    <tr>
-      <td>Health Telemetry Check</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td>Permitted</td>
-      <td><code>/api/health</code> (permitAll)</td>
-    </tr>
-  </table>
-
-  <h2>5. REST API Specification & Swagger Endpoints Catalog</h2>
-  <p>
-    All REST endpoints adhere strictly to standard HTTP status codes, structured JSON envelopes (<code>ApiResponse&lt;T&gt;</code>), and standardized error handling.
-  </p>
-
-  <table>
-    <tr>
-      <th>HTTP Method</th>
-      <th>Endpoint Path</th>
-      <th>Auth / RBAC</th>
-      <th>Request Body / Params</th>
-      <th>Functional Description</th>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/api/health</code></td>
-      <td>Public</td>
-      <td>None</td>
-      <td>Returns service health, application name, and UTC timestamp for UptimeRobot monitoring.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/swagger-ui/index.html</code></td>
-      <td>Public</td>
-      <td>None</td>
-      <td>Interactive Swagger UI console for exploring and executing API requests.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/v3/api-docs</code></td>
-      <td>Public</td>
-      <td>None</td>
-      <td>OpenAPI 3.0 JSON specification describing all data contracts and operations.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/admin/register</code></td>
-      <td>Public</td>
-      <td><code>AdminRegistrationRequest</code> (fullName, email, password, confirmPassword)</td>
-      <td>Initiates registration and dispatches 6-digit verification OTP to the administrator's email.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/admin/verify-otp</code></td>
-      <td>Public</td>
-      <td><code>OtpVerificationRequest</code> (email, otp)</td>
-      <td>Verifies OTP and finalizes creation of the Administrator user account in MySQL.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/admin/resend-otp</code></td>
-      <td>Public</td>
-      <td><code>ResendOtpRequest</code> (email)</td>
-      <td>Generates and delivers a fresh 6-digit registration OTP, respecting rate-limit cooldowns.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/login</code></td>
-      <td>Public</td>
-      <td><code>LoginRequest</code> (email, password)</td>
-      <td>Authenticates administrator credentials and returns signed JWT access token.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/google/complete-registration</code></td>
-      <td>Public</td>
-      <td><code>GoogleRegistrationRequest</code> (token, password, confirmPassword)</td>
-      <td>Finalizes Google OAuth initial account creation with mandatory password setup.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/google/link-account</code></td>
-      <td>Public</td>
-      <td><code>GoogleLinkAccountRequest</code> (token, password)</td>
-      <td>Links Google OAuth identity to an existing traditional password account.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/api/auth/profile</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td>None</td>
-      <td>Retrieves the authenticated administrator's profile information.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-put">PUT</span></td>
-      <td><code>/api/auth/profile</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td><code>UpdateProfileRequest</code> (fullName)</td>
-      <td>Updates the administrator's display name.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/change-password</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td><code>ChangePasswordRequest</code> (currentPassword, newPassword, confirmPassword)</td>
-      <td>Securely changes account password after validating the existing password hash.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/forgot-password</code></td>
-      <td>Public</td>
-      <td><code>ForgotPasswordRequest</code> (email)</td>
-      <td>Sends a 6-digit password reset OTP to registered email address.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/verify-reset-otp</code></td>
-      <td>Public</td>
-      <td><code>VerifyResetOtpRequest</code> (email, otp)</td>
-      <td>Validates password reset OTP and issues a short-lived reset token.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/auth/reset-password</code></td>
-      <td>Public</td>
-      <td><code>ResetPasswordRequest</code> (token, newPassword, confirmPassword)</td>
-      <td>Updates forgotten password using the verified reset authorization token.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/companies</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td><code>CompanyRequest</code> (companyName, industry, businessEmail, contactPhone, website)</td>
-      <td>Registers the administrator's company workspace (one company per admin limit).</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/api/companies/my</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td>None</td>
-      <td>Fetches details of the authenticated administrator's company workspace.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-put">PUT</span></td>
-      <td><code>/api/companies/my</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td><code>CompanyRequest</code> (companyName, industry, businessEmail, contactPhone, website)</td>
-      <td>Updates company organizational details.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/api/employees</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td>None</td>
-      <td>Retrieves all employee records scoped exclusively to the administrator's company.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-post">POST</span></td>
-      <td><code>/api/employees</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td><code>EmployeeRequest</code> (fullName, email, phone, department, designation, salary, joiningDate)</td>
-      <td>Creates a new employee record associated with the administrator's company workspace.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-get">GET</span></td>
-      <td><code>/api/employees/{id}</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td>Path variable <code>id</code></td>
-      <td>Retrieves details of a specific employee, verifying company ownership.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-put">PUT</span></td>
-      <td><code>/api/employees/{id}</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td><code>EmployeeRequest</code></td>
-      <td>Updates employee profile, role, department, salary, or contact information.</td>
-    </tr>
-    <tr>
-      <td><span class="badge-method method-delete">DELETE</span></td>
-      <td><code>/api/employees/{id}</code></td>
-      <td>Bearer JWT (Admin)</td>
-      <td>Path variable <code>id</code></td>
-      <td>Permanently deletes employee record after validating workspace ownership.</td>
-    </tr>
-  </table>
-
-  <h2>6. Security, Authentication & Cryptography</h2>
-  <ul>
-    <li><strong>Password Hashing</strong>: Passwords are salted and hashed using Spring Security's <code>BCryptPasswordEncoder</code> with a standard strength factor of 10. Passwords are never stored or logged in plaintext.</li>
-    <li><strong>Stateless JWT Issuance</strong>: Signed using HMAC-SHA256 (256-bit secret key). Tokens encapsulate subject ID, authenticated email, and the <code>ADMIN</code> authority claim with a configurable expiration duration (default 24 hours).</li>
-    <li><strong>CORS & CSRF Defense</strong>: Cross-Origin Resource Sharing is enabled with explicit whitelist allowances for HTTP methods (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, <code>OPTIONS</code>) and request headers. CSRF protection is safely disabled as the backend uses stateless JWT authentication with no session cookies.</li>
-    <li><strong>Automatic Legacy Role Migration</strong>: The <code>AccountRoleMigrationRunner</code> component executes on every Spring Boot startup, seamlessly upgrading any legacy user records to the <code>ADMIN</code> role while preserving all existing company links and employee records.</li>
-  </ul>
-
-  <h2>7. Live Cloud Deployment & Continuous Availability (UptimeRobot)</h2>
-  <div class="callout-success">
-    <strong>Continuous Uptime Architecture:</strong> Free-tier cloud instances (e.g. Render, Railway) suspend compute containers after 15 minutes of inactivity. The integrated <code>/api/health</code> endpoint is designed to receive automated HTTP GET probes from UptimeRobot every 5 minutes, keeping the container warm and eliminating latency spikes for end-users.
-  </div>
-
-  <table>
-    <tr>
-      <th>UptimeRobot Field</th>
-      <th>Recommended Production Setting</th>
-      <th>Purpose</th>
-    </tr>
-    <tr>
-      <td><strong>Monitor Type</strong></td>
-      <td><code>HTTP(s)</code></td>
-      <td>Standard HTTP health polling</td>
-    </tr>
-    <tr>
-      <td><strong>Friendly Name</strong></td>
-      <td><code>Staff Management Portal Backend</code></td>
-      <td>Dashboard identification</td>
-    </tr>
-    <tr>
-      <td><strong>URL / IP</strong></td>
-      <td><code>https://staff-backend-mwuh.onrender.com/api/health</code></td>
-      <td>Target endpoint path</td>
-    </tr>
-    <tr>
-      <td><strong>Monitoring Interval</strong></td>
-      <td><code>Every 5 minutes</code></td>
-      <td>Prevents container inactivity spin-down</td>
-    </tr>
-    <tr>
-      <td><strong>Expected HTTP Status</strong></td>
-      <td><code>200 OK</code></td>
-      <td>Healthy service validation</td>
-    </tr>
-  </table>
-
-  <h2>8. Quick Local Setup & Development Guide</h2>
-  <pre><code># 1. Database Setup (MySQL)
-mysql -u root -p
-CREATE DATABASE IF NOT EXISTS staff_management_portal;
-
-# 2. Backend Service (Spring Boot 3.3.5)
-cd backend
-mvn clean compile
-mvn spring-boot:run
-
-# Local Swagger UI:
-# http://localhost:8080/swagger-ui/index.html
-# Production Swagger UI:
-# https://staff-backend-mwuh.onrender.com/swagger-ui/index.html
-
-# Local OpenAPI JSON schema:
-# http://localhost:8080/v3/api-docs
-# Production OpenAPI JSON schema:
-# https://staff-backend-mwuh.onrender.com/v3/api-docs
-
-# Production Health Check:
-# https://staff-backend-mwuh.onrender.com/api/health
-
-# 3. Frontend Client (React 18 + Vite)
-cd ../frontend
-npm install
-npm run dev
-
-# Frontend will be live at:
-# http://localhost:3000</code></pre>
-
-</div>
-
-</body>
-</html>
-
+&bull;<&bull;!DOCTYPE html&bull;>&bull;
+&bull;<html&bull; lang&bull;=&bull;"en&bull;"&bull;>&bull;
+&bull;<head&bull;>&bull;
+&bull; &bull; &bull;<meta&bull; charset=&bull;"UTF-8"&bull;>&bull;
+&bull; &bull; &bull;<meta&bull; name&bull;=&bull;"viewport&bull;"&bull; content=&bull;"width=device&bull;-width,&bull; initial-scale=1.0"&bull;>&bull;
+&bull; &bull; &bull;<title>Staff Management&bull; Portal&bull; &bull;&ndash;&bull; Technical Specification &bull;&&bull; Architecture&bull;<&bull;/title>&bull;
+&bull; &bull; &bull;<style>&bull;
+&bull; &bull; &bull; &bull; &bull;@import&bull; url(&bull;'https:&bull;/&bull;/fonts.googleapis&bull;.com/css2&bull;?family&bull;=Inter:wght&bull;@400;500;600;700;800&family&bull;=Outfit&bull;:wght&bull;@600;700;800&family&bull;=JetBrains+Mono&bull;:wght&bull;@400;500;600&display=swap&bull;'&bull;)&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;
+&bull; &bull; &bull; &bull; &bull;*&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; box-sizing&bull;:&bull; border&bull;-box;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; body&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-family&bull;:&bull; &bull;'Inter'&bull;,&bull; &bull;-apple-system&bull;,&bull; BlinkMacSystemFont&bull;,&bull; &bull;"Segoe UI&bull;"&bull;,&bull; Roboto&bull;,&bull; sans&bull;-serif;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#1e293b&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#f1f5f9&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; line&bull;-height&bull;:&bull; 1.6;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 40px&bull; 20px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.page&bull;-container &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; max-width:&bull; 1040px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 0 auto&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#ffffff&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 56px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 16px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; box-shadow&bull;:&bull; 0 10px&bull; 30px&bull; rgba&bull;(15&bull;,&bull; 23&bull;,&bull; 42&bull;,&bull; 0.08&bull;)&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#e2e8f0&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.doc-badge &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; display:&bull; inline&bull;-block;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#eff6ff&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#1d4ed8&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#bfdbfe&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 5px 14px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.78rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; letter&bull;-spacing:&bull; 0.06em&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; text&bull;-transform:&bull; uppercase;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 6px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 16px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; h1&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-family&bull;:&bull; &bull;'Outfit&bull;'&bull;,&bull; sans&bull;-serif;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 2.35rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 800;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#0f172a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; letter&bull;-spacing:&bull; &bull;-0.025em;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 12px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; line&bull;-height&bull;:&bull; 1.25&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.lead&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 1.05rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#475569&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 28px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; line&bull;-height&bull;:&bull; 1.6;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; h2&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-family&bull;:&bull; &bull;'Outfit&bull;'&bull;,&bull; sans&bull;-serif;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 1.45rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#1e3a8a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-top:&bull; 44px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 16px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding-bottom&bull;:&bull; 10px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-bottom&bull;:&bull; 2px solid &bull;#e2e8f0&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; display:&bull; flex&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; align-items:&bull; center&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; gap:&bull; 10px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; h3&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 1.1rem&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#0f172a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-top:&bull; 24px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 10px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; p &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.94rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#334155&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 12px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; line&bull;-height&bull;:&bull; 1.65&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; ul&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding-left&bull;:&bull; 24px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 18px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; li&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.94rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#334155&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; line&bull;-height&bull;:&bull; 1.6;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; table &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; width:&bull; 100%&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-collapse&bull;:&bull; collapse&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 18px&bull; 0 28px&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.88rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#ffffff&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; overflow&bull;:&bull; hidden&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#cbd5e1&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; th&bull;,&bull; td&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 12px&bull; 16px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#e2e8f0&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; text&bull;-align:&bull; left&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; th&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;-color:&bull; &bull;#1e3a8a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#ffffff&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.85rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; letter&bull;-spacing:&bull; 0.02em&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; tr&bull;:nth-child(even&bull;)&bull; td&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;-color:&bull; &bull;#f8fafc&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; tr&bull;:hover td&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;-color:&bull; &bull;#f1f5f9&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.meta&bull;-table th&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;-color:&bull; &bull;#f8fafc&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#0f172a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; width:&bull; 22&bull;%&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 600;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.meta&bull;-table td&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; width:&bull; 28&bull;%&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#1e293b&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; code&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-family&bull;:&bull; &bull;'JetBrains Mono&bull;'&bull;,&bull; Consolas&bull;,&bull; monospace;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.84rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#f1f5f9&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 2px 6px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 4px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#0f172a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#e2e8f0&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; pre &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-family&bull;:&bull; &bull;'JetBrains Mono&bull;'&bull;,&bull; Consolas&bull;,&bull; monospace;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.84rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#0f172a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#f8fafc&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 16px&bull; 20px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; overflow&bull;-x:&bull; auto&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 16px&bull; 0 24px&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; line&bull;-height&bull;:&bull; 1.5;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.badge &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; display:&bull; inline&bull;-block;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 2px 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.74rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 4px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; text&bull;-transform:&bull; uppercase;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; letter&bull;-spacing:&bull; 0.04em&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.badge-get &bull;{&bull; background&bull;:&bull; &bull;#dbeafe&bull;;&bull; color:&bull; &bull;#1e40af&bull;;&bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.badge-post&bull; &bull;{&bull; background&bull;:&bull; &bull;#dcfce7&bull;;&bull; color:&bull; &bull;#15803d&bull;;&bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.badge-put &bull;{&bull; background&bull;:&bull; &bull;#fef3c7&bull;;&bull; color:&bull; &bull;#b45309&bull;;&bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.badge-delete&bull; &bull;{&bull; background&bull;:&bull; &bull;#fee2e2&bull;;&bull; color:&bull; &bull;#b91c1c&bull;;&bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-callout &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#eff6ff&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#bfdbfe&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-left&bull;:&bull; 5px solid &bull;#2563eb&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 18px&bull; 22px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 20px&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-callout h4&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#1e40af&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.98rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 6px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-red-warning &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#fef2f2&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#fecaca&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-left&bull;:&bull; 5px solid &bull;#dc2626&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 20px&bull; 24px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 22px&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-red-warning h4&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#dc2626&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 1.05rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 800;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-red-warning p &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#7f1d1d&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.95rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 6px;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-red-warning &bull;.quote-text&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 1.1rem&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 800;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#b91c1c&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#fee2e2&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 8px 14px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 6px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; display:&bull; inline&bull;-block;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 8px 0;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-green-success &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#f0fdf4&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;:&bull; 1px solid &bull;#bbf7d0&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-left&bull;:&bull; 5px solid &bull;#16a34a&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; border&bull;-radius&bull;:&bull; 8px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; padding:&bull; 18px&bull; 22px&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 20px&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.card&bull;-green-success h4&bull; &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#15803d&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-size&bull;:&bull; 0.98rem;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;-bottom&bull;:&bull; 6px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 700;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;
+&bull; &bull; &bull; &bull; a &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; color:&bull; &bull;#2563eb&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; text&bull;-decoration&bull;:&bull; none&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; font&bull;-weight&bull;:&bull; 500;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; a:hover &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; text&bull;-decoration&bull;:&bull; underline;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull; &bull; &bull;.section-divider &bull;{&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; height&bull;:&bull; 1px;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; background&bull;:&bull; &bull;#e2e8f0&bull;;&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; margin&bull;:&bull; 36px&bull; 0;&bull;
+&bull; &bull; &bull; &bull; &bull;}&bull;
+&bull; &bull; &bull;<&bull;/style>&bull;
+&bull;<&bull;/head&bull;>&bull;
+&bull;<body&bull;>&bull;
+&bull;
+&bull;<div class=&bull;"page&bull;-container"&bull;>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"doc-badge"&bull;>Enterprise&bull; Architecture&bull; Specification &bull;&bull;&bull; Version 2.2.0<&bull;/div>&bull;
+&bull; &bull; &bull;<h1&bull;>Staff Management&bull; Portal&bull; &bull;&mdash;&bull; Technical Specification<&bull;/h1&bull;>&bull;
+&bull; &bull; &bull;<p class=&bull;"lead&bull;"&bull;>A complete&bull; architectural blueprint and engineering reference for the Synchronoss multi-tenant&bull; workforce management&bull; platform&bull;.&bull; Features&bull; dual&bull;-gateway authentication&bull; &bull;(Email/Password&bull; &bull;&amp;&bull; Google&bull; OAuth 2.0 &bull;/&bull; OpenID&bull; Connect)&bull;,&bull; automated onboarding&bull;,&bull; isolated&bull; company workspaces&bull;,&bull; real&bull;-time&bull; analytics,&bull; and live&bull; cloud deployment&bull;.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<table class=&bull;"meta&bull;-table"&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Author&bull; &bull;/&bull; Lead&bull; Engineer&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Sudhir&bull; Kumar<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>GitHub&bull; Repository&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<a href&bull;=&bull;"https:&bull;/&bull;/github&bull;.com/sudhirkr2003&bull;/staff-management&bull;-portal&bull;"&bull; target&bull;=&bull;"&bull;_blank"&bull;>github&bull;.com/sudhirkr2003&bull;/staff-management&bull;-portal&bull;<&bull;/a>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Live&bull; Frontend&bull; Client&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<a href&bull;=&bull;"https:&bull;/&bull;/staff-btv0&bull;.onrender&bull;.com"&bull; target&bull;=&bull;"&bull;_blank"&bull;>https:&bull;/&bull;/staff-btv0&bull;.onrender&bull;.com<&bull;/a>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Live&bull; Backend REST&bull; API<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<a href&bull;=&bull;"https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com"&bull; target&bull;=&bull;"&bull;_blank"&bull;>https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com<&bull;/a>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Interactive Swagger UI&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<a href&bull;=&bull;"https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com/swagger-ui&bull;/index.html&bull;"&bull; target&bull;=&bull;"&bull;_blank"&bull;>Swagger UI&bull; &bull;(Production&bull; Interactive Docs&bull;)&bull;<&bull;/a>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>OpenAPI 3.0 JSON&bull; Schema&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<a href&bull;=&bull;"https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com/v3&bull;/api-docs&bull;"&bull; target&bull;=&bull;"&bull;_blank"&bull;>&bull;/v3&bull;/api-docs&bull;<&bull;/a>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Production&bull; Health&bull; Check<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<a href&bull;=&bull;"https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com/api/health&bull;"&bull; target&bull;=&bull;"&bull;_blank"&bull;>&bull;/api/health&bull; &bull;(Status&bull;:&bull; UP&bull;)&bull;<&bull;/a>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Cloud Database&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Aiven MySQL Cloud &bull;(&bull;<code&bull;>defaultdb<&bull;/code&bull;>&bull;,&bull; SSL REQUIRED&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Deployment&bull; Branches&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>main&bull;<&bull;/code&bull;>&bull; &bull;(Production&bull;)&bull;,&bull; &bull;<code&bull;>develop<&bull;/code&bull;>&bull; &bull;(Active&bull; Dev)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Preserved Feature Branch&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>main&bull;-otp<&bull;/code&bull;>&bull; &bull;(Dedicated Email OTP Verification&bull; Flow&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Core&bull; Stack<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Java&bull; 17&bull;,&bull; Spring&bull; Boot&bull; 3.3.5,&bull; React 18&bull; &bull;(Vite&bull; 5)&bull;,&bull; MySQL 8.0<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Specification Date&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>05&bull; November&bull; 2026&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<h2&bull;>1.&bull; System&bull; Architecture&bull; &bull;&amp;&bull; Tier&bull; Breakdown<&bull;/h2&bull;>&bull;
+&bull; &bull; &bull;<p>The &bull;<strong&bull;>Staff Management&bull; Portal&bull;<&bull;/strong&bull;>&bull; is&bull; built as&bull; a cloud-native&bull;,&bull; multi-tier&bull; enterprise&bull; SaaS&bull; platform&bull;.&bull; It&bull; strictly&bull; enforces&bull; tenant&bull; isolation across&bull; administrative&bull; workspaces&bull;,&bull; employee&bull; profiles&bull;,&bull; department&bull; distributions,&bull; and payroll analytics.&bull; All administrative&bull; operations&bull; are secured behind&bull; cryptographically signed&bull; JSON&bull; Web Tokens&bull; &bull;(JWT)&bull; adhering&bull; to&bull; defense-in&bull;-depth security&bull; principles&bull;.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<table>&bull;
+&bull; &bull; &bull; &bull; &bull;<thead>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Architectural Tier&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Technology&bull; Stack<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Core&bull; Responsibilities&bull; &bull;&amp;&bull; Capabilities&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/thead>&bull;
+&bull; &bull; &bull; &bull; &bull;<tbody>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Presentation&bull; Tier&bull; &bull;(SPA)&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>React 18&bull;,&bull; Vite&bull; 5,&bull; Axios,&bull; Lucide&bull; React,&bull; CSS3&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Responsive&bull; single&bull;-page&bull; application,&bull; automated 2-second&bull; onboarding&bull; transition&bull;,&bull; client&bull;-side&bull; validation&bull;,&bull; dynamic Swagger UI&bull; navigation&bull;,&bull; and state-managed company setup modals&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Application Tier&bull; &bull;(REST&bull;)&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Java&bull; 17&bull;,&bull; Spring&bull; Boot&bull; 3.3.5,&bull; Spring&bull; Security&bull; 6,&bull; Hibernate<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Stateless REST&bull; microservices,&bull; OAuth2&bull; OpenID&bull; client&bull;,&bull; JWT authentication&bull; pipeline&bull;,&bull; transaction management&bull;,&bull; BCrypt&bull; encryption&bull;,&bull; and workspace isolation enforcement.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>API Documentation<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>SpringDoc OpenAPI 3.0,&bull; Swagger UI&bull; 2.6.0<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Live&bull; interactive API testing sandbox,&bull; auto&bull;-generated OpenAPI schemas,&bull; Bearer&bull; JWT authentication&bull; authorization header&bull; injection.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Cloud Persistence<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Aiven MySQL 8.0 Cloud Cluster<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Managed relational&bull; database&bull; with&bull; SSL enforcement &bull;(&bull;<code&bull;>sslMode=REQUIRED&bull;<&bull;/code&bull;>&bull;)&bull;,&bull; HikariCP&bull; high&bull;-throughput&bull; connection&bull; pooling,&bull; and automated schema&bull; migrations&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Hosting &bull;&amp;&bull; Edge&bull; Delivery&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Render&bull; Cloud PaaS&bull; &bull;&amp;&bull; Static&bull; Web Platform&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Multi-stage Dockerized&bull; backend service with&bull; HTTPS edge&bull; termination,&bull; continuous&bull; GitHub&bull; integration,&bull; zero&bull;-downtime&bull; rolling deploys,&bull; and automated health&bull; checks&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tbody>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"card&bull;-callout"&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<h4&bull;>Git Branch&bull; Deployment&bull; Strategy&bull; &bull;&amp;&bull; Release Policy&bull;<&bull;/h4&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<p>&bull;&bull;&bull; &bull;<strong&bull;>&bull;<code&bull;>main&bull;<&bull;/code&bull;>&bull; &bull;(Active&bull; Production&bull;)&bull;:&bull;<&bull;/strong&bull;>&bull; Deployed&bull; live&bull; to&bull; Render&bull;.&bull; Configured&bull; for direct&bull; admin registration&bull;,&bull; immediate auto&bull;-login,&bull; 2-second&bull; automated onboarding&bull; transition&bull;,&bull; and direct&bull; password&bull; reset.&bull;<br&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;&bull;&bull; &bull;<strong&bull;>&bull;<code&bull;>develop<&bull;/code&bull;>&bull; &bull;(Staging &bull;/&bull; Development)&bull;:&bull;<&bull;/strong&bull;>&bull; Continuous&bull; development branch&bull; synchronized&bull; directly&bull; with&bull; &bull;<code&bull;>main&bull;<&bull;/code&bull;>&bull;.&bull;<br&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;&bull;&bull; &bull;<strong&bull;>&bull;<code&bull;>main&bull;-otp<&bull;/code&bull;>&bull; &bull;(Dedicated Feature Preservation&bull;)&bull;:&bull;<&bull;/strong&bull;>&bull; Preserved branch&bull; containing&bull; the full&bull; email OTP verification&bull; workflow&bull; for registration&bull; and password&bull; recovery&bull;.&bull;<&bull;/p>&bull;
+&bull; &bull; &bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"section-divider"&bull;>&bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<h2&bull;>2.&bull; Multi-Login Architecture&bull; &bull;&amp;&bull; Dual&bull;-Gateway Security&bull;<&bull;/h2&bull;>&bull;
+&bull; &bull; &bull;<p>A flagship&bull; capability&bull; of&bull; the Staff Management&bull; Portal&bull; is&bull; its &bull;<strong&bull;>Dual&bull;-Gateway Multi-Login Architecture&bull;<&bull;/strong&bull;>&bull;.&bull; Administrators&bull; have&bull; full&bull; autonomy&bull; to&bull; authenticate&bull; either&bull; using traditional enterprise&bull; credentials &bull;(Email &bull;&amp;&bull; Password&bull;)&bull; or&bull; via federated identity&bull; through Google&bull; OAuth 2.0 &bull;/&bull; OpenID&bull; Connect.&bull; Both&bull; pathways&bull; converge&bull; cleanly into&bull; the same&bull; secure&bull;,&bull; stateless JWT authorization session.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Authentication&bull; Pathway Comparison&bull; Matrix&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<table>&bull;
+&bull; &bull; &bull; &bull; &bull;<thead>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Feature &bull;/&bull; Dimension<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Method&bull; 1:&bull; Standard&bull; Credentials<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Method&bull; 2:&bull; Google&bull; OAuth 2.0 &bull;/&bull; OpenID&bull; Connect<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/thead>&bull;
+&bull; &bull; &bull; &bull; &bull;<tbody>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Identity&bull; Provider&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Local MySQL User&bull; Directory &bull;(Internal&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Google&bull; Identity&bull; Services&bull; &bull;(Federated OpenID&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Protocol&bull; &bull;/&bull; Standard&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>RESTful JSON&bull; POST&bull; with&bull; BCrypt&bull; Hashing<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>OAuth 2.0 Authorization Code&bull; Flow&bull; &bull;+&bull; OpenID&bull; Connect<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Required&bull; Form&bull; Input<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Email address and strong&bull; account password&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Single&bull; click on&bull; &bull;'Continue&bull; with&bull; Google&bull;'&bull; button&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Password&bull; Storage<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Salted&bull; BCrypt&bull; hashing with&bull; work&bull; factor&bull; 10&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Google&bull;-managed credentials &bull;(no&bull; password&bull; stored&bull; locally)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Session Result&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Standard&bull; Bearer&bull; JWT with&bull; ADMIN role&bull; claim<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Identical Bearer&bull; JWT with&bull; ADMIN role&bull; claim<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Unlinked&bull; Account Handling&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Standard&bull; account registration&bull; form&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Guided&bull; prompt&bull;:&bull; &bull;<em&bull;>&bull;"Your&bull; Google&bull; account is&bull; not registered&bull;.&bull; Create&bull; a password&bull; to&bull; complete&bull; your&bull; registration&bull;.&bull;"&bull;<&bull;/em&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Auto&bull;-Login Support<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Instant token issuance&bull; upon&bull; registration&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Instant token issuance&bull; if&bull; Google&bull; profile exists&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tbody>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Stateless JSON&bull; Web Token &bull;(JWT)&bull; Specifications&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>Both&bull; authentication&bull; gateways&bull; generate&bull; an&bull; identical HMAC&bull;-SHA256&bull; &bull;(HS256)&bull; signed&bull; JWT session token.&bull; This&bull; ensures completely&bull; stateless backend operations&bull;:&bull;<&bull;/p>&bull;
+&bull; &bull; &bull;<ul&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Cryptographic Signature:&bull;<&bull;/strong&bull;>&bull; HMAC&bull;-SHA256&bull; signing using a 256-bit cryptographically secure&bull; secret&bull; &bull;(&bull;<code&bull;>JWT_SECRET&bull;<&bull;/code&bull;>&bull;)&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Validity&bull; Duration&bull;:&bull;<&bull;/strong&bull;>&bull; 24&bull; hours &bull;(86&bull;,400,000 milliseconds&bull;)&bull; from&bull; generation&bull; timestamp.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Token Claims&bull;:&bull;<&bull;/strong&bull;>&bull; Contains&bull; &bull;<code&bull;>id&bull;<&bull;/code&bull;>&bull; &bull;(primary user&bull; ID&bull;)&bull;,&bull; &bull;<code&bull;>sub<&bull;/code&bull;>&bull; &bull;(normalized&bull; user&bull; email)&bull;,&bull; and &bull;<code&bull;>role&bull;<&bull;/code&bull;>&bull; &bull;(&bull;<code&bull;>ADMIN<&bull;/code&bull;>&bull;)&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Client&bull; Storage &bull;&amp;&bull; Transmission&bull;:&bull;<&bull;/strong&bull;>&bull; Stored&bull; securely&bull; in&bull; &bull;<code&bull;>localStorage&bull;<&bull;/code&bull;>&bull;;&bull; Axios interceptors&bull; inject&bull; &bull;<code&bull;>Authorization:&bull; Bearer&bull; &bull;&lt&bull;;token&gt&bull;;&bull;<&bull;/code&bull;>&bull; on&bull; all requests&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Security&bull; Filter&bull;:&bull;<&bull;/strong&bull;>&bull; &bull;<code&bull;>JwtAuthenticationFilter<&bull;/code&bull;>&bull; validates tokens&bull; on&bull; each&bull; inbound request.&bull; Expired or&bull; forged&bull; tokens&bull; produce an&bull; HTTP&bull; 401 Unauthorized&bull; response&bull;,&bull; prompting the client&bull; to&bull; clear stored&bull; sessions&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull;<&bull;/ul&bull;>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Password&bull; Security&bull; &bull;&amp;&bull; Complexity&bull; Standards<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>For standard&bull; credentials,&bull; password&bull; complexity&bull; is&bull; validated on&bull; the client&bull; and enforced&bull; in&bull; backend services&bull;.&bull; Passwords must&bull; be&bull; at&bull; least 8 characters&bull; long&bull; and contain at&bull; least one uppercase letter&bull;,&bull; one lowercase letter&bull;,&bull; one numeric digit,&bull; and one special symbol&bull; &bull;(&bull;<code&bull;>&bull;@&bull;$&bull;!&bull;%&bull;*&bull;?&bull;&amp;&bull;#&bull;<&bull;/code&bull;>&bull;)&bull;.&bull; Passwords are encrypted using Spring&bull; Security&bull;'s &bull;<code&bull;>BCryptPasswordEncoder<&bull;/code&bull;>&bull; with&bull; salt&bull; generation&bull; and 10&bull; hashing rounds&bull; before&bull; database&bull; persistence.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"section-divider"&bull;>&bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<h2&bull;>3.&bull; Deep&bull;-Dive&bull;:&bull; Google&bull; OAuth 2.0 &bull;&amp;&bull; OpenID&bull; Connect Flow&bull;<&bull;/h2&bull;>&bull;
+&bull; &bull; &bull;<p>The federated Google&bull; authentication&bull; mechanism allows&bull; single&bull;-click onboarding&bull; and login while ensuring&bull; account authenticity&bull; and identity&bull; verification&bull;.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>End-to&bull;-End OAuth 2.0 Sequence&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<table>&bull;
+&bull; &bull; &bull; &bull; &bull;<thead>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Step&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Actor &bull;/&bull; Component<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Endpoint&bull; &bull;/&bull; Protocol&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Action&bull; &bull;&amp;&bull; Payload Description<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/thead>&bull;
+&bull; &bull; &bull; &bull; &bull;<tbody>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>1<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Administrator<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Client&bull; UI&bull; Button&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Clicks&bull; &bull;"Continue&bull; with&bull; Google&bull;"&bull; on&bull; Login or&bull; Registration&bull; page&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>2<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Frontend&bull; Client&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/oauth2&bull;/authorization/google&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Redirects user&bull; to&bull; Spring&bull; Security&bull;'s OAuth2&bull; authorization endpoint&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>3<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Spring&bull; Security&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>accounts&bull;.google&bull;.com/o/oauth2&bull;/v2&bull;/auth&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Redirects to&bull; Google&bull; consent screen&bull; requesting&bull; &bull;<code&bull;>openid&bull; email profile<&bull;/code&bull;>&bull; scopes&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>4<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Google&bull; Auth&bull; Server&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>User&bull; Consent Screen&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>User&bull; authenticates with&bull; Google&bull; and grants&bull; profile access&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>5<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Google&bull; Auth&bull; Server&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/login/oauth2&bull;/code&bull;/google&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Redirects back&bull; to&bull; backend callback&bull; endpoint&bull; with&bull; one-time&bull; authorization code&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>6<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Backend OAuth Client&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>oauth2&bull;.googleapis&bull;.com/token<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Exchanges authorization code&bull; for Google&bull; ID&bull; token and access&bull; token server&bull;-side&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>7<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Success Handler<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>OAuth2AuthenticationSuccessHandler&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Extracts&bull; claims&bull;:&bull; &bull;<code&bull;>sub<&bull;/code&bull;>&bull; &bull;(Google&bull; ID&bull;)&bull;,&bull; &bull;<code&bull;>email<&bull;/code&bull;>&bull;,&bull; &bull;<code&bull;>email_verified&bull;<&bull;/code&bull;>&bull;,&bull; and &bull;<code&bull;>name&bull;<&bull;/code&bull;>&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tbody>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Account Resolution&bull; &bull;&amp;&bull; Identity&bull; Linking Logic<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>When&bull; Google&bull; returns verified&bull; claims&bull; to&bull; &bull;<code&bull;>OAuth2AuthenticationSuccessHandler&bull;<&bull;/code&bull;>&bull;,&bull; the engine&bull; navigates three resolution&bull; pathways&bull;:&bull;<&bull;/p>&bull;
+&bull; &bull; &bull;<ul&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Scenario&bull; A &bull;&mdash;&bull; Existing&bull; Registered&bull; User&bull; by&bull; Email:&bull;<&bull;/strong&bull;>&bull; If&bull; an&bull; account with&bull; the matching&bull; email already exists&bull;,&bull; the handler automatically links the user&bull;'s &bull;<code&bull;>googleId&bull;<&bull;/code&bull;>&bull;,&bull; sets&bull; provider&bull; to&bull; &bull;<code&bull;>BOTH&bull;<&bull;/code&bull;>&bull;,&bull; assigns role&bull; &bull;<code&bull;>ADMIN<&bull;/code&bull;>&bull;,&bull; generates a JWT session token,&bull; and redirects to&bull; &bull;<code&bull;>https:&bull;/&bull;/staff-btv0&bull;.onrender&bull;.com/&bull;?status&bull;=login_success&amp;token=&bull;.&bull;.&bull;.&bull;<&bull;/code&bull;>&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Scenario&bull; B &bull;&mdash;&bull; Existing&bull; User&bull; by&bull; Google&bull; ID&bull;:&bull;<&bull;/strong&bull;>&bull; If&bull; the user&bull; previously&bull; authenticated via Google&bull;,&bull; the handler generates a fresh JWT token and redirects immediately to&bull; the authenticated application.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Scenario&bull; C &bull;&mdash;&bull; Unregistered&bull; &bull;/&bull; First-Time&bull; Google&bull; User&bull;:&bull;<&bull;/strong&bull;>&bull; If&bull; neither email nor Google&bull; ID&bull; exists&bull; in&bull; the database&bull;,&bull; the portal&bull; does&bull; &bull;<em&bull;>not<&bull;/em&bull;>&bull; create&bull; an&bull; unverified&bull; account.&bull; Instead,&bull; it&bull; generates a signed&bull;,&bull; tamper&bull;-evident &bull;<code&bull;>regToken&bull;<&bull;/code&bull;>&bull; and redirects the browser with&bull; &bull;<code&bull;>status&bull;=google&bull;_register&bull;&amp;regToken&bull;=&bull;.&bull;.&bull;.&bull;<&bull;/code&bull;>&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull;<&bull;/ul&bull;>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"card&bull;-red-warning"&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<h4&bull;>Critical&bull; User&bull; Experience&bull;:&bull; Unregistered&bull; Google&bull; Account Handling&bull;<&bull;/h4&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<p>When&bull; an&bull; unregistered&bull; Google&bull; user&bull; attempts&bull; to&bull; authenticate&bull;,&bull; the portal&bull; automatically presents&bull; a prominent red warning banner&bull;:&bull;<&bull;/p>&bull;
+&bull; &bull; &bull; &bull; &bull;<div class=&bull;"quote-text&bull;"&bull;>Your&bull; Google&bull; account is&bull; not registered&bull;.&bull; Create&bull; a password&bull; to&bull; complete&bull; your&bull; registration&bull;.&bull;<&bull;/div>&bull;
+&bull; &bull; &bull; &bull; &bull;<p>The administrator's email is&bull; pre-filled&bull; from&bull; their verified&bull; Google&bull; profile,&bull; and they&bull; are prompted&bull; to&bull; set and confirm their password&bull;.&bull; Upon&bull; submission&bull; to&bull; &bull;<code&bull;>&bull;/api/auth&bull;/google&bull;/complete&bull;-registration&bull;<&bull;/code&bull;>&bull;,&bull; the account is&bull; created with&bull; provider&bull; &bull;<code&bull;>BOTH&bull;<&bull;/code&bull;>&bull;,&bull; and the administrator is&bull; immediately logged&bull; in&bull; with&bull; an&bull; active&bull; JWT session.&bull;<&bull;/p>&bull;
+&bull; &bull; &bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"section-divider"&bull;>&bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<h2&bull;>4.&bull; User&bull; Lifecycle,&bull; Admin Registration&bull; &bull;&amp;&bull; Onboarding&bull; Workflows<&bull;/h2&bull;>&bull;
+&bull; &bull; &bull;<p>The onboarding&bull; workflow&bull; eliminates&bull; manual&bull; friction&bull; while preserving&bull; strict&bull; data&bull; validation&bull; standards.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Direct&bull; Administrator Registration&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>On&bull; &bull;<code&bull;>&bull;/register&bull;<&bull;/code&bull;>&bull;,&bull; the user&bull; submits full&bull; name&bull;,&bull; corporate email,&bull; and password&bull;.&bull; The backend validates syntax&bull;,&bull; uniqueness&bull;,&bull; and password&bull; strength&bull;,&bull; hashes&bull; credentials with&bull; BCrypt&bull;,&bull; saves the user&bull; as&bull; &bull;<code&bull;>ADMIN<&bull;/code&bull;>&bull;,&bull; and immediately returns a JWT session token within&bull; a &bull;<code&bull;>LoginResponse<&bull;/code&bull;>&bull; object&bull;,&bull; achieving seamless&bull; auto&bull;-login.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"card&bull;-green-success"&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<h4&bull;>Automated Onboarding&bull; Transition&bull; &bull;(2-Second&bull; Timer)&bull;<&bull;/h4&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<p>1.&bull; Upon&bull; receiving HTTP&bull; 200 from&bull; &bull;<code&bull;>&bull;/api/auth&bull;/admin/register&bull;<&bull;/code&bull;>&bull;,&bull; the UI&bull; displays&bull; a clean &bull;<strong&bull;>Registration&bull; Successful&bull;<&bull;/strong&bull;>&bull; screen&bull; with&bull; a green checkmark.&bull;<br&bull;>&bull;
+&bull; &bull; &bull; &bull; 2.&bull; The application records the JWT token and begins&bull; an&bull; internal&bull; 2,000-millisecond &bull;(2-second&bull;)&bull; countdown.&bull;<br&bull;>&bull;
+&bull; &bull; &bull; &bull; 3.&bull; The success screen&bull; automatically disappears&bull; and routes&bull; directly&bull; to&bull; the &bull;<strong&bull;>Company Workspace Setup Modal<&bull;/strong&bull;>&bull; &bull;(&bull;<code&bull;>&bull;/company/create&bull;<&bull;/code&bull;>&bull;)&bull; without requiring manual&bull; button&bull; clicks&bull; or&bull; re&bull;-login.&bull;<&bull;/p>&bull;
+&bull; &bull; &bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Direct&bull; Password&bull; Recovery&bull; &bull;&amp;&bull; Reset<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>To&bull; eliminate reliance&bull; on&bull; third-party outbound&bull; SMTP&bull; relays&bull;,&bull; administrators&bull; can recover credentials via direct&bull; password&bull; reset on&bull; the login portal&bull;.&bull; Providing their verified&bull; email and specifying&bull; a new compliant password&bull; immediately updates their hashed&bull; credentials in&bull; the MySQL database&bull; and redirects them&bull; back&bull; to&bull; login.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>First-Time&bull; Administrator Journey Stages&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<table>&bull;
+&bull; &bull; &bull; &bull; &bull;<thead>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Stage<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>User&bull; Action&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>System&bull; Operation<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Outcome &bull;/&bull; Next&bull; State<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/thead>&bull;
+&bull; &bull; &bull; &bull; &bull;<tbody>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>1.&bull; Register&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Enters&bull; credentials on&bull; &bull;<code&bull;>&bull;/register&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>BCrypt&bull; hash&bull; &bull;+&bull; DB&bull; persist &bull;+&bull; JWT generated<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>JWT saved;&bull; displays&bull; Green Tick&bull; screen&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>2.&bull; Transition&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Observes&bull; success confirmation&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>2-second&bull; countdown timer runs&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Screen&bull; automatically routes&bull; to&bull; Company Setup<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>3.&bull; Workspace<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Submits Company Name&bull;,&bull; Industry&bull;,&bull; Phone<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>POST&bull; &bull;/api/companies<&bull;/code&bull;>&bull; bound to&bull; admin ID&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Company workspace provisioned<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>4.&bull; Management&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Adds&bull; employees,&bull; assigns departments<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>POST&bull; &bull;/api/employees<&bull;/code&bull;>&bull; with&bull; company scope<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Live&bull; dashboard and analytics active&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tbody>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"section-divider"&bull;>&bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<h2&bull;>5.&bull; Multi-Tenant&bull; Workspace &bull;&amp;&bull; Workforce Management&bull; Engine&bull;<&bull;/h2&bull;>&bull;
+&bull; &bull; &bull;<p>The platform&bull; guarantees&bull; absolute&bull; tenant&bull; data&bull; isolation across&bull; administrative&bull; accounts&bull;.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Tenant&bull; Workspace Isolation Architecture&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<ul&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Relational&bull; Scoping:&bull;<&bull;/strong&bull;>&bull; The &bull;<code&bull;>Company<&bull;/code&bull;>&bull; entity&bull; holds a foreign key to&bull; the administrator's &bull;<code&bull;>User&bull;<&bull;/code&bull;>&bull; record&bull;.&bull; All &bull;<code&bull;>Employee&bull;<&bull;/code&bull;>&bull; records hold&bull; a mandatory foreign key to&bull; &bull;<code&bull;>Company<&bull;/code&bull;>&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Service-Level Scoping:&bull;<&bull;/strong&bull;>&bull; API queries invoke&bull; &bull;<code&bull;>EmployeeRepository&bull;.findByCompany(company)&bull;<&bull;/code&bull;>&bull;,&bull; ensuring&bull; an&bull; administrator from&bull; Company A can never view&bull; or&bull; modify&bull; employees from&bull; Company B.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Input Persistence Guard:&bull;<&bull;/strong&bull;>&bull; The company management&bull; modal retains user&bull; input during&bull; editing,&bull; preventing&bull; automated background&bull; polling from&bull; resetting form&bull; fields&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull;<&bull;/ul&bull;>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Employee&bull; Lifecycle Management&bull; &bull;(CRUD&bull;)&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<table>&bull;
+&bull; &bull; &bull; &bull; &bull;<thead>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Operation<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Endpoint&bull; Path&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Payload &bull;/&bull; Parameters&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Business&bull; Validation&bull; &bull;&amp;&bull; Security&bull; Rules<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/thead>&bull;
+&bull; &bull; &bull; &bull; &bull;<tbody>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Create&bull; Employee&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>POST&bull; &bull;/api/employees<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Name&bull;,&bull; Email,&bull; Department&bull;,&bull; Designation,&bull; Salary&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Validates email syntax&bull;,&bull; ensures unique&bull; email per company,&bull; positive&bull; salary&bull;,&bull; valid department&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>List&bull; Employees<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>GET &bull;/api/employees<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Bearer&bull; JWT Header&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Returns all active&bull; employees scoped&bull; strictly&bull; to&bull; the authenticated administrator's company.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Update&bull; Employee&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>PUT &bull;/api/employees/&bull;{id&bull;}&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Updated employee&bull; profile object&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Verifies&bull; employee&bull; belongs to&bull; caller&bull;'s company before&bull; applying&bull; modifications.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<strong&bull;>Delete&bull; Employee&bull;<&bull;/strong&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>DELETE&bull; &bull;/api/employees/&bull;{id&bull;}&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Target&bull; Employee&bull; ID&bull; path&bull; variable&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Executes&bull; atomic&bull; record&bull; deletion&bull; with&bull; UI&bull; confirmation&bull; dialog&bull;.&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tbody>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Real&bull;-Time&bull; Department&bull; Distribution&bull; Analytics<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>The analytics endpoint&bull; &bull;(&bull;<code&bull;>GET &bull;/api/employees/departments<&bull;/code&bull;>&bull;)&bull; runs&bull; optimized SQL aggregation queries &bull;(&bull;<code&bull;>GROUP BY&bull; department&bull;<&bull;/code&bull;>&bull;)&bull; to&bull; compute real&bull;-time&bull; employee&bull; counts&bull;,&bull; department&bull; headcount percentages,&bull; and total annual&bull; department&bull; payroll.&bull; The frontend&bull; renders these metrics in&bull; interactive dashboard widgets.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Dynamic Environment-Aware Swagger UI&bull; Navigation&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<p>The top navigation&bull; &bull;"Swagger UI&bull;"&bull; link&bull; dynamically computes&bull; its target&bull; destination using &bull;<code&bull;>import&bull;.meta&bull;.env.VITE&bull;_API_BASE&bull;_URL<&bull;/code&bull;>&bull;:&bull;<&bull;/p>&bull;
+&bull; &bull; &bull;<ul&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Local Development:&bull;<&bull;/strong&bull;>&bull; Resolves&bull; to&bull; &bull;<code&bull;>http&bull;:&bull;/&bull;/localhost:8080&bull;/swagger-ui&bull;/index.html&bull;<&bull;/code&bull;>&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Production&bull; Deployment&bull;:&bull;<&bull;/strong&bull;>&bull; Resolves&bull; dynamically to&bull; &bull;<code&bull;>https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com/swagger-ui&bull;/index.html&bull;<&bull;/code&bull;>&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull;<&bull;/ul&bull;>&bull;
+&bull;
+&bull; &bull; &bull;<div class=&bull;"section-divider"&bull;>&bull;<&bull;/div>&bull;
+&bull;
+&bull; &bull; &bull;<h2&bull;>6.&bull; REST&bull; API Specifications&bull;,&bull; Cloud Hosting &bull;&amp;&bull; Telemetry<&bull;/h2&bull;>&bull;
+&bull; &bull; &bull;<p>Complete&bull; RESTful API specifications&bull;,&bull; cloud runtime parameters&bull;,&bull; and continuous&bull; health&bull; monitoring&bull; configurations&bull;.&bull;<&bull;/p>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Comprehensive REST&bull; API Endpoint&bull; Catalog<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<table>&bull;
+&bull; &bull; &bull; &bull; &bull;<thead>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>HTTP&bull; Method&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Endpoint&bull; Path&bull;<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Authorization<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<th&bull;>Description &bull;&amp;&bull; Status&bull; Codes<&bull;/th&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/thead>&bull;
+&bull; &bull; &bull; &bull; &bull;<tbody>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/health&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Service health&bull; probe returning status&bull; UP&bull; and timestamp &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/swagger-ui&bull;/index.html&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Interactive OpenAPI 3.0 documentation &bull;&amp;&bull; live&bull; test&bull; console<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/v3&bull;/api-docs&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Raw OpenAPI 3.0 JSON&bull; schema&bull; for automated integrations&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-post&bull;"&bull;>POST&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/auth&bull;/admin/register&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Direct&bull; admin registration&bull;;&bull; returns JWT session token &bull;(201 Created)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-post&bull;"&bull;>POST&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/auth&bull;/login<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Standard&bull; credentials authentication&bull;;&bull; returns Bearer&bull; JWT &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-post&bull;"&bull;>POST&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/auth&bull;/google&bull;/complete&bull;-registration&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Completes Google&bull; account registration&bull; with&bull; password&bull;;&bull; returns JWT &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-post&bull;"&bull;>POST&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/auth&bull;/reset-password&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Public&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Direct&bull; password&bull; reset with&bull; email and password&bull; validation&bull; &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/auth&bull;/profile<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Fetches authenticated administrator profile details &bull;(200 OK&bull; &bull;/&bull; 401)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/companies/my&bull;-company<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Retrieves corporate company profile for current admin &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-post&bull;"&bull;>POST&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/companies<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Creates new corporate workspace bound to&bull; admin &bull;(201 Created)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-put"&bull;>PUT<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/companies<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Updates organization&bull; profile &bull;(industry&bull;,&bull; contact phone,&bull; website)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/employees<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Lists all employees in&bull; administrator's isolated&bull; workspace &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-post&bull;"&bull;>POST&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/employees<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Creates new employee&bull; record&bull; with&bull; salary&bull; and department&bull; &bull;(201 Created)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-delete&bull;"&bull;>DELETE&bull;<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/employees/&bull;{id&bull;}&bull;<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Permanently deletes specified employee&bull; record&bull; &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<span&bull; class=&bull;"badge badge-get"&bull;>GET<&bull;/span&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>&bull;<code&bull;>&bull;/api/employees/departments<&bull;/code&bull;>&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Admin<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull; &bull;<td&bull;>Calculates&bull; department&bull; headcount and payroll analytics &bull;(200 OK&bull;)&bull;<&bull;/td&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull; &bull; &bull;<&bull;/tr&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<&bull;/tbody>&bull;
+&bull; &bull; &bull;<&bull;/table>&bull;
+&bull;
+&bull; &bull; &bull;<h3&bull;>Production&bull; Cloud Hosting &bull;&amp;&bull; Container Architecture&bull;<&bull;/h3&bull;>&bull;
+&bull; &bull; &bull;<ul&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Backend Web Service &bull;(Render&bull;)&bull;:&bull;<&bull;/strong&bull;>&bull; Multi-stage Docker&bull; build with&bull; &bull;<code&bull;>maven:3.9.6<&bull;/code&bull;>&bull; compiler&bull; and &bull;<code&bull;>eclipse-temurin:17&bull;-jre-jammy<&bull;/code&bull;>&bull; minimal runtime.&bull; Terminating HTTPS on&bull; port&bull; 443 with&bull; internal&bull; forwarding&bull; to&bull; port&bull; 8080&bull;.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Managed Cloud Database&bull; &bull;(Aiven MySQL)&bull;:&bull;<&bull;/strong&bull;>&bull; MySQL 8.0 cluster with&bull; enforced&bull; SSL encryption&bull; &bull;(&bull;<code&bull;>sslMode=REQUIRED&bull;<&bull;/code&bull;>&bull;)&bull; and HikariCP&bull; connection&bull; pooling configured&bull; with&bull; auto&bull;-reconnect.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull; &bull; &bull;<li&bull;>&bull;<strong&bull;>Automated Keep&bull;-Alive Monitoring&bull;:&bull;<&bull;/strong&bull;>&bull; Scheduled 5-minute&bull; health&bull; check pings directed&bull; at&bull; &bull;<code&bull;>https:&bull;/&bull;/staff-backend-mwuh&bull;.onrender&bull;.com/api/health&bull;<&bull;/code&bull;>&bull; to&bull; ensure&bull; immediate response&bull; times and prevent instance&bull; hibernation.&bull;<&bull;/li&bull;>&bull;
+&bull; &bull; &bull;<&bull;/ul&bull;>&bull;
+&bull;
+&bull;<&bull;/div>&bull;
+&bull;
+&bull;<&bull;/body&bull;>&bull;
+&bull;<&bull;/html&bull;>&bull;
+&bull;
