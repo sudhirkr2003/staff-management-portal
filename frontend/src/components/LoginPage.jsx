@@ -199,9 +199,13 @@ const LoginPage = ({
       <div className="card-header auth-header">
         <h1 className="card-title auth-title">Login</h1>
         <p className="card-subtitle compact-subtitle">
-          {googleRegData
-            ? 'Your Google account is not registered. Create a password to complete your registration.'
-            : 'Sign in to access your administrative workspace.'}
+          {googleRegData ? (
+            <span style={{ color: '#dc2626' }}>
+              Your Google account is not registered. Create a password to complete your registration.
+            </span>
+          ) : (
+            'Sign in to access your administrative workspace.'
+          )}
         </p>
       </div>
 
