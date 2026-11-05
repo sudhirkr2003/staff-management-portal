@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Staff Management Portal – Technical Specification & System Architecture</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background: #f8fafc;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .page-container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+    }
+    .doc-badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .lead {
+      font-size: 1.05rem;
+      color: #475569;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 36px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    p, li {
+      font-size: 0.9rem;
+      color: #334155;
+    }
+    ul {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0 24px 0;
+      font-size: 0.82rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+    td {
+      color: #334155;
+    }
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #2563eb;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      margin: 16px 0;
+      line-height: 1.45;
+    }
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      font-size: 0.86rem;
+      color: #1e40af;
+    }
+    .callout-success {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      font-size: 0.86rem;
+      color: #065f46;
+    }
+    .badge-method {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .method-get { background: #dbeafe; color: #1e40af; }
+    .method-post { background: #dcfce7; color: #166534; }
+    .method-put { background: #fef3c7; color: #92400e; }
+    .method-delete { background: #fee2e2; color: #991b1b; }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .page-container {
+        box-shadow: none;
+        border: none;
+        padding: 24px 20px;
+        max-width: 100%;
+      }
+      h2 {
+        page-break-after: avoid;
+      }
+      table, pre {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-container">
+  <div class="doc-badge">Technical Specification & System Architecture</div>
+  <h1>Staff Management Portal – Enterprise Workforce Platform</h1>
+  <p class="lead">
+    Comprehensive engineering report covering full-stack system architecture, company-isolated workspace tenancy, dual-provider authentication (JWT + Google OAuth 2.0 / OIDC), Administrator role-based access control (Admin RBAC), relational database schemas, automated role migration, and interactive OpenAPI / Swagger 3.0 specification.
+  </p>
+
+  <table>
+    <tr>
+      <th>Author / Candidate</th>
+      <td>Sudhir Kumar (GitHub: <a href="https://github.com/sudhirkr2003" target="_blank">sudhirkr2003</a>)</td>
+      <th>GitHub Repository</th>
+      <td><a href="https://github.com/sudhirkr2003/staff-management-portal" target="_blank">staff-management-portal</a></td>
+    </tr>
+    <tr>
+      <th>Live Frontend UI</th>
+      <td><code>http://localhost:3000</code> / Production Web Client</td>
+      <th>Live Backend API</th>
+      <td><code>http://localhost:8080</code> / Production REST Service</td>
+    </tr>
+    <tr>
+      <th>Interactive Swagger UI</th>
+      <td><a href="http://localhost:8080/swagger-ui/index.html" target="_blank">/swagger-ui/index.html</a> (or <code>/swagger-ui.html</code>)</td>
+      <th>OpenAPI 3.0 JSON Docs</th>
+      <td><a href="http://localhost:8080/v3/api-docs" target="_blank">/v3/api-docs</a></td>
+    </tr>
+    <tr>
+      <th>Technology Stack</th>
+      <td>Spring Boot 3.3.5 (Java 17) + React 18 (Vite) + MySQL 8.0 + Spring Security 6</td>
+      <th>Specification Date</th>
+      <td>05 November 2026</td>
+    </tr>
+  </table>
+
+  <h2>1. Project Overview & Core Capabilities</h2>
+  <p>
+    The <strong>Staff Management Portal</strong> is a high-performance enterprise employee administration and organizational workforce platform. Built with a clean separation of concerns, the system enables corporate administrators to register their organization, establish an isolated company workspace, and manage employee records throughout their entire employment lifecycle.
+  </p>
+
+  <h3>1.1 Architectural Pillars</h3>
+  <ul>
+    <li><strong>Strict Admin Tenancy (1 Admin = 1 Company = All Employees)</strong>: Each unique email registration establishes an independent Administrator account. Every administrator owns exactly one company workspace, and all employee records belong exclusively to that company. Strict backend ownership checks prevent cross-tenant data leakage.</li>
+    <li><strong>Dual-Provider Secure Authentication</strong>: Integrated support for email/password registration backed by 6-digit cryptographic OTP delivery, along with Google OAuth 2.0 / OpenID Connect Single Sign-On (SSO). Both authentication flows automatically provision authenticated accounts with the <code>ADMIN</code> role.</li>
+    <li><strong>Full-Lifecycle Employee CRUD</strong>: Comprehensive employee management supporting creation, profile viewing, multi-attribute updates, salary adjustment, department reassignment, and safe record deletion with confirmation modals.</li>
+    <li><strong>Real-Time Workforce Analytics & Telemetry</strong>: Instant telemetry on total employee headcount, active company departments, overall payroll expenditure, average salary benchmarks, and department staff distribution.</li>
+    <li><strong>Continuous Availability & Keep-Alive Diagnostics</strong>: Dedicated public <code>/api/health</code> endpoint returning service status and ISO timestamps, optimized for continuous cloud monitoring via UptimeRobot to eliminate cold-start delays on cloud containers.</li>
+    <li><strong>Interactive Swagger / OpenAPI 3.0 Documentation</strong>: Native interactive API explorer supporting live execution and Bearer JWT authorization testing.</li>
+  </ul>
+
+  <h2>2. Tech Stack & Architectural Decisions</h2>
+  <table>
+    <tr>
+      <th>Architectural Layer</th>
+      <th>Technology Selected</th>
+      <th>Decision Rationale & Benefits</th>
+    </tr>
+    <tr>
+      <td><strong>Backend Runtime</strong></td>
+      <td>Spring Boot 3.3.5 (Java 17 LTS)</td>
+      <td>Modern Java LTS runtime, strong type safety, declarative transaction management (<code>@Transactional</code>), fast startup, and native JPA persistence.</td>
+    </tr>
+    <tr>
+      <td><strong>API Documentation</strong></td>
+      <td>Springdoc OpenAPI 2.6.0 (Swagger 3)</td>
+      <td>Auto-generates OpenAPI 3.0 schema and rich interactive Swagger UI supporting Bearer JWT authentication for testing protected endpoints.</td>
+    </tr>
+    <tr>
+      <td><strong>Frontend Client</strong></td>
+      <td>React 18 + Vite 5.4 + Vanilla CSS</td>
+      <td>Ultra-fast hot module replacement (HMR), sub-second build times, modular component tree, lightweight bundle (&lt; 350 KB), zero runtime CSS overhead.</td>
+    </tr>
+    <tr>
+      <td><strong>Database Engine</strong></td>
+      <td>MySQL 8.0 Relational DB</td>
+      <td>Industry-standard relational persistence, ACID guarantees, foreign key integrity constraints, and indexed unique lookups.</td>
+    </tr>
+    <tr>
+      <td><strong>Security Framework</strong></td>
+      <td>Spring Security 6.x + Stateless JWT</td>
+      <td>Stateless HMAC-SHA256 token verification, BCrypt password hashing (cost factor 10), OAuth2 authorization code grant client, and fine-grained endpoint matchers.</td>
+    </tr>
+    <tr>
+      <td><strong>Email Delivery</strong></td>
+      <td>Spring Boot Starter Mail (JavaMailSender)</td>
+      <td>Asynchronous delivery of time-limited 6-digit OTP verification codes for new registrations and password recovery.</td>
+    </tr>
+    <tr>
+      <td><strong>Health Monitoring</strong></td>
+      <td>UptimeRobot + Custom <code>/api/health</code></td>
+      <td>Automated 5-minute health probe preventing idle cloud container spin-down and ensuring 100% uptime.</td>
+    </tr>
+  </table>
+
+  <h2>3. Relational Database Schema & Data Models</h2>
+  <table>
+    <tr>
+      <th>Table Name</th>
+      <th>Primary Attributes & Types</th>
+      <th>Constraints, Relations & Indices</th>
+    </tr>
+    <tr>
+      <td><code>users</code></td>
+      <td><code>id</code> (BIGINT PK, AI), <code>full_name</code> (VARCHAR 150), <code>email</code> (VARCHAR 150), <code>password</code> (VARCHAR 255), <code>role</code> (VARCHAR 50), <code>google_id</code> (VARCHAR 100), <code>auth_provider</code> (VARCHAR 20), <code>email_verified</code> (BOOLEAN), <code>created_at</code>, <code>updated_at</code></td>
+      <td>Primary administrator entity. <code>UNIQUE(email)</code>, <code>UNIQUE(google_id)</code>. Role enforced as <code>ADMIN</code> via JPA <code>@PrePersist</code> and <code>@PreUpdate</code> lifecycle listeners.</td>
+    </tr>
+    <tr>
+      <td><code>companies</code></td>
+      <td><code>id</code> (BIGINT PK, AI), <code>name</code> (VARCHAR 150), <code>industry</code> (VARCHAR 100), <code>business_email</code> (VARCHAR 150), <code>contact_phone</code> (VARCHAR 30), <code>website</code> (VARCHAR 255), <code>owner_id</code> (BIGINT FK), <code>created_at</code>, <code>updated_at</code></td>
+      <td>Company workspace entity. <code>UNIQUE(owner_id)</code> enforces strictly 1 company per administrator. Foreign key referencing <code>users(id)</code>.</td>
+    </tr>
+    <tr>
+      <td><code>employees</code></td>
+      <td><code>id</code> (BIGINT PK, AI), <code>full_name</code> (VARCHAR 150), <code>email</code> (VARCHAR 150), <code>phone</code> (VARCHAR 30), <code>department</code> (VARCHAR 100), <code>designation</code> (VARCHAR 100), <code>salary</code> (DECIMAL 12,2), <code>joining_date</code> (DATE), <code>company_id</code> (BIGINT FK), <code>user_id</code> (BIGINT), <code>created_at</code>, <code>updated_at</code></td>
+      <td>Employee records. <code>FK(company_id) &rarr; companies(id)</code>. Multi-attribute isolation ensuring queries filter by <code>company_id</code> matching the authenticated admin.</td>
+    </tr>
+    <tr>
+      <td><code>pending_registrations</code></td>
+      <td><code>id</code> (BIGINT PK, AI), <code>email</code> (VARCHAR 150), <code>full_name</code> (VARCHAR 150), <code>password</code> (VARCHAR 255), <code>otp_hash</code> (VARCHAR 255), <code>expires_at</code> (DATETIME), <code>resend_available_at</code> (DATETIME), <code>attempts</code> (INT), <code>created_at</code></td>
+      <td>Staging store for unverified registrations. <code>UNIQUE(email)</code>. OTPs hashed with BCrypt. Expired after 10 minutes.</td>
+    </tr>
+    <tr>
+      <td><code>password_reset_otps</code></td>
+      <td><code>id</code> (BIGINT PK, AI), <code>email</code> (VARCHAR 150), <code>otp_hash</code> (VARCHAR 255), <code>expires_at</code> (DATETIME), <code>failed_attempts</code> (INT), <code>created_at</code></td>
+      <td>Secure OTP repository for forgotten password recovery. <code>UNIQUE(email)</code>. Enforces max attempt thresholds and cooldown timers.</td>
+    </tr>
+  </table>
+
+  <h2>4. Role-Based Access Control (RBAC) & Tenancy Isolation</h2>
+  <p>
+    The application follows an <strong>Admin-Only Single-Tenant Workspace Architecture</strong>. All end-users interacting with the portal are Administrators who manage their respective organizational silos. Regular employees do not log into the administrative portal, guaranteeing that privileged payroll and personnel data remain confidential.
+  </p>
+
+  <table>
+    <tr>
+      <th>Operational Action</th>
+      <th>Unauthenticated Public</th>
+      <th>Authenticated Administrator</th>
+      <th>Cross-Tenant Admin</th>
+      <th>Enforcement Mechanism</th>
+    </tr>
+    <tr>
+      <td>Register Admin & Request OTP</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td>N/A</td>
+      <td><code>/api/auth/admin/register</code> (Public permitAll)</td>
+    </tr>
+    <tr>
+      <td>Verify OTP & Create Account</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td>N/A</td>
+      <td>Validates OTP hash, provisions <code>ADMIN</code> role</td>
+    </tr>
+    <tr>
+      <td>Google OAuth SSO Sign-In</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td>N/A</td>
+      <td>Spring Security OAuth2 Callback & Token Issuer</td>
+    </tr>
+    <tr>
+      <td>Create Company Workspace</td>
+      <td>Deny (401)</td>
+      <td>Allowed (Single Creation)</td>
+      <td>Deny (Already Created)</td>
+      <td><code>CompanyService.createCompany()</code> enforces 1 company per user</td>
+    </tr>
+    <tr>
+      <td>View / Update Own Company</td>
+      <td>Deny (401)</td>
+      <td>Full Access</td>
+      <td>Deny (403)</td>
+      <td>Ownership check against authenticated JWT Principal</td>
+    </tr>
+    <tr>
+      <td>Employee List, Search & Filter</td>
+      <td>Deny (401)</td>
+      <td>Own Company Records</td>
+      <td>Strictly Filtered</td>
+      <td><code>employeeRepository.findByCompanyId(adminCompany.getId())</code></td>
+    </tr>
+    <tr>
+      <td>Add / Update Employee Record</td>
+      <td>Deny (401)</td>
+      <td>Allowed</td>
+      <td>Deny (403)</td>
+      <td><code>verifyEmployeeOwnership()</code> throws <code>ForbiddenOperationException</code></td>
+    </tr>
+    <tr>
+      <td>Delete Employee Record</td>
+      <td>Deny (401)</td>
+      <td>Allowed (Admin Only)</td>
+      <td>Deny (403)</td>
+      <td><code>validateAdmin(principal)</code> + Ownership Verification</td>
+    </tr>
+    <tr>
+      <td>Swagger UI & OpenAPI Docs</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td><code>/swagger-ui/**</code> & <code>/v3/api-docs/**</code> (permitAll)</td>
+    </tr>
+    <tr>
+      <td>Health Telemetry Check</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td>Permitted</td>
+      <td><code>/api/health</code> (permitAll)</td>
+    </tr>
+  </table>
+
+  <h2>5. REST API Specification & Swagger Endpoints Catalog</h2>
+  <p>
+    All REST endpoints adhere strictly to standard HTTP status codes, structured JSON envelopes (<code>ApiResponse&lt;T&gt;</code>), and standardized error handling.
+  </p>
+
+  <table>
+    <tr>
+      <th>HTTP Method</th>
+      <th>Endpoint Path</th>
+      <th>Auth / RBAC</th>
+      <th>Request Body / Params</th>
+      <th>Functional Description</th>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/api/health</code></td>
+      <td>Public</td>
+      <td>None</td>
+      <td>Returns service health, application name, and UTC timestamp for UptimeRobot monitoring.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/swagger-ui/index.html</code></td>
+      <td>Public</td>
+      <td>None</td>
+      <td>Interactive Swagger UI console for exploring and executing API requests.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/v3/api-docs</code></td>
+      <td>Public</td>
+      <td>None</td>
+      <td>OpenAPI 3.0 JSON specification describing all data contracts and operations.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/admin/register</code></td>
+      <td>Public</td>
+      <td><code>AdminRegistrationRequest</code> (fullName, email, password, confirmPassword)</td>
+      <td>Initiates registration and dispatches 6-digit verification OTP to the administrator's email.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/admin/verify-otp</code></td>
+      <td>Public</td>
+      <td><code>OtpVerificationRequest</code> (email, otp)</td>
+      <td>Verifies OTP and finalizes creation of the Administrator user account in MySQL.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/admin/resend-otp</code></td>
+      <td>Public</td>
+      <td><code>ResendOtpRequest</code> (email)</td>
+      <td>Generates and delivers a fresh 6-digit registration OTP, respecting rate-limit cooldowns.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/login</code></td>
+      <td>Public</td>
+      <td><code>LoginRequest</code> (email, password)</td>
+      <td>Authenticates administrator credentials and returns signed JWT access token.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/google/complete-registration</code></td>
+      <td>Public</td>
+      <td><code>GoogleRegistrationRequest</code> (token, password, confirmPassword)</td>
+      <td>Finalizes Google OAuth initial account creation with mandatory password setup.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/google/link-account</code></td>
+      <td>Public</td>
+      <td><code>GoogleLinkAccountRequest</code> (token, password)</td>
+      <td>Links Google OAuth identity to an existing traditional password account.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/api/auth/profile</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td>None</td>
+      <td>Retrieves the authenticated administrator's profile information.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-put">PUT</span></td>
+      <td><code>/api/auth/profile</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td><code>UpdateProfileRequest</code> (fullName)</td>
+      <td>Updates the administrator's display name.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/change-password</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td><code>ChangePasswordRequest</code> (currentPassword, newPassword, confirmPassword)</td>
+      <td>Securely changes account password after validating the existing password hash.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/forgot-password</code></td>
+      <td>Public</td>
+      <td><code>ForgotPasswordRequest</code> (email)</td>
+      <td>Sends a 6-digit password reset OTP to registered email address.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/verify-reset-otp</code></td>
+      <td>Public</td>
+      <td><code>VerifyResetOtpRequest</code> (email, otp)</td>
+      <td>Validates password reset OTP and issues a short-lived reset token.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/auth/reset-password</code></td>
+      <td>Public</td>
+      <td><code>ResetPasswordRequest</code> (token, newPassword, confirmPassword)</td>
+      <td>Updates forgotten password using the verified reset authorization token.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/companies</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td><code>CompanyRequest</code> (companyName, industry, businessEmail, contactPhone, website)</td>
+      <td>Registers the administrator's company workspace (one company per admin limit).</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/api/companies/my</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td>None</td>
+      <td>Fetches details of the authenticated administrator's company workspace.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-put">PUT</span></td>
+      <td><code>/api/companies/my</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td><code>CompanyRequest</code> (companyName, industry, businessEmail, contactPhone, website)</td>
+      <td>Updates company organizational details.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/api/employees</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td>None</td>
+      <td>Retrieves all employee records scoped exclusively to the administrator's company.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-post">POST</span></td>
+      <td><code>/api/employees</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td><code>EmployeeRequest</code> (fullName, email, phone, department, designation, salary, joiningDate)</td>
+      <td>Creates a new employee record associated with the administrator's company workspace.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-get">GET</span></td>
+      <td><code>/api/employees/{id}</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td>Path variable <code>id</code></td>
+      <td>Retrieves details of a specific employee, verifying company ownership.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-put">PUT</span></td>
+      <td><code>/api/employees/{id}</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td><code>EmployeeRequest</code></td>
+      <td>Updates employee profile, role, department, salary, or contact information.</td>
+    </tr>
+    <tr>
+      <td><span class="badge-method method-delete">DELETE</span></td>
+      <td><code>/api/employees/{id}</code></td>
+      <td>Bearer JWT (Admin)</td>
+      <td>Path variable <code>id</code></td>
+      <td>Permanently deletes employee record after validating workspace ownership.</td>
+    </tr>
+  </table>
+
+  <h2>6. Security, Authentication & Cryptography</h2>
+  <ul>
+    <li><strong>Password Hashing</strong>: Passwords are salted and hashed using Spring Security's <code>BCryptPasswordEncoder</code> with a standard strength factor of 10. Passwords are never stored or logged in plaintext.</li>
+    <li><strong>Stateless JWT Issuance</strong>: Signed using HMAC-SHA256 (256-bit secret key). Tokens encapsulate subject ID, authenticated email, and the <code>ADMIN</code> authority claim with a configurable expiration duration (default 24 hours).</li>
+    <li><strong>CORS & CSRF Defense</strong>: Cross-Origin Resource Sharing is enabled with explicit whitelist allowances for HTTP methods (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, <code>OPTIONS</code>) and request headers. CSRF protection is safely disabled as the backend uses stateless JWT authentication with no session cookies.</li>
+    <li><strong>Automatic Legacy Role Migration</strong>: The <code>AccountRoleMigrationRunner</code> component executes on every Spring Boot startup, seamlessly upgrading any legacy user records to the <code>ADMIN</code> role while preserving all existing company links and employee records.</li>
+  </ul>
+
+  <h2>7. Live Cloud Deployment & Continuous Availability (UptimeRobot)</h2>
+  <div class="callout-success">
+    <strong>Continuous Uptime Architecture:</strong> Free-tier cloud instances (e.g. Render, Railway) suspend compute containers after 15 minutes of inactivity. The integrated <code>/api/health</code> endpoint is designed to receive automated HTTP GET probes from UptimeRobot every 5 minutes, keeping the container warm and eliminating latency spikes for end-users.
+  </div>
+
+  <table>
+    <tr>
+      <th>UptimeRobot Field</th>
+      <th>Recommended Production Setting</th>
+      <th>Purpose</th>
+    </tr>
+    <tr>
+      <td><strong>Monitor Type</strong></td>
+      <td><code>HTTP(s)</code></td>
+      <td>Standard HTTP health polling</td>
+    </tr>
+    <tr>
+      <td><strong>Friendly Name</strong></td>
+      <td><code>Staff Management Portal Backend</code></td>
+      <td>Dashboard identification</td>
+    </tr>
+    <tr>
+      <td><strong>URL / IP</strong></td>
+      <td><code>https://&lt;your-backend-domain&gt;/api/health</code></td>
+      <td>Target endpoint path</td>
+    </tr>
+    <tr>
+      <td><strong>Monitoring Interval</strong></td>
+      <td><code>Every 5 minutes</code></td>
+      <td>Prevents container inactivity spin-down</td>
+    </tr>
+    <tr>
+      <td><strong>Expected HTTP Status</strong></td>
+      <td><code>200 OK</code></td>
+      <td>Healthy service validation</td>
+    </tr>
+  </table>
+
+  <h2>8. Quick Local Setup & Development Guide</h2>
+  <pre><code># 1. Database Setup (MySQL)
+mysql -u root -p
+CREATE DATABASE IF NOT EXISTS staff_management_portal;
+
+# 2. Backend Service (Spring Boot 3.3.5)
+cd backend
+mvn clean compile
+mvn spring-boot:run
+
+# Swagger UI will be available at:
+# http://localhost:8080/swagger-ui/index.html
+# OpenAPI JSON schema at:
+# http://localhost:8080/v3/api-docs
+
+# 3. Frontend Client (React 18 + Vite)
+cd ../frontend
+npm install
+npm run dev
+
+# Frontend will be live at:
+# http://localhost:3000</code></pre>
+
+</div>
+
+</body>
+</html>
+

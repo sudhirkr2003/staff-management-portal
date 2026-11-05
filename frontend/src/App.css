@@ -109,6 +109,22 @@ body {
   background-color: #f1f5f9;
 }
 
+.nav-link-swagger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-swagger-icon {
+  opacity: 0.7;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.nav-link-swagger:hover .nav-swagger-icon {
+  opacity: 1;
+  transform: translateY(-1px) translateX(1px);
+}
+
 .home-nav-actions {
   display: flex;
   align-items: center;
@@ -187,6 +203,12 @@ body {
   font-weight: 600;
   color: #334155;
   padding: 0.5rem 0;
+}
+
+.mobile-nav-link-swagger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .mobile-nav-divider {

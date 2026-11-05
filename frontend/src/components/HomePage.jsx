@@ -3,7 +3,7 @@ import {
   Users, Building2, TrendingUp, Briefcase,
   ShieldCheck, FileText, ArrowRight, LogIn,
   UserPlus, Menu, X, CheckCircle2, Sparkles,
-  LayoutDashboard, Search
+  LayoutDashboard, Search, ExternalLink
 } from 'lucide-react';
 
 const HomePage = ({ onNavigate, currentUser }) => {
@@ -47,6 +47,15 @@ const HomePage = ({ onNavigate, currentUser }) => {
           <a href="#home" onClick={scrollToTop} className="nav-link">Home</a>
           <a href="#features" onClick={(e) => scrollToSection(e, 'features-section')} className="nav-link">Features</a>
           <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works-section')} className="nav-link">How It Works</a>
+          <a
+            href="http://localhost:8080/swagger-ui/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-link nav-link-swagger"
+          >
+            <span>Swagger UI</span>
+            <ExternalLink size={13} className="nav-swagger-icon" />
+          </a>
         </nav>
 
         <div className="home-nav-actions">
@@ -96,6 +105,16 @@ const HomePage = ({ onNavigate, currentUser }) => {
           <a href="#home" onClick={scrollToTop} className="mobile-nav-link">Home</a>
           <a href="#features" onClick={(e) => scrollToSection(e, 'features-section')} className="mobile-nav-link">Features</a>
           <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works-section')} className="mobile-nav-link">How It Works</a>
+          <a
+            href="http://localhost:8080/swagger-ui/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mobile-nav-link mobile-nav-link-swagger"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <span>Swagger UI</span>
+            <ExternalLink size={13} className="nav-swagger-icon" />
+          </a>
           <div className="mobile-nav-divider" />
           {currentUser ? (
             <button
