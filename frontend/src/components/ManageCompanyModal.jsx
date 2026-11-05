@@ -20,44 +20,50 @@ const ManageCompanyModal = ({ company: initialCompany, onClose, onCompanyUpdated
   useEffect(() => {
     if (initialCompany) {
       setCompany(initialCompany);
-      setFormData({
-        companyName: initialCompany.companyName || initialCompany.name || '',
-        industry: initialCompany.industry || '',
-        businessEmail: initialCompany.businessEmail || '',
-        contactPhone: initialCompany.contactPhone || '',
-        website: initialCompany.website || ''
-      });
+      if (!isEditing) {
+        setFormData({
+          companyName: initialCompany.companyName || initialCompany.name || '',
+          industry: initialCompany.industry || '',
+          businessEmail: initialCompany.businessEmail || '',
+          contactPhone: initialCompany.contactPhone || '',
+          website: initialCompany.website || ''
+        });
+      }
     }
-  }, [initialCompany]);
+  }, [initialCompany, isEditing]);
 
   useEffect(() => {
     let isMounted = true;
-    getMyCompany()
-      .then((res) => {
-        if (isMounted && res && res.success && res.data) {
-          setCompany(res.data);
-          setFormData({
-            companyName: res.data.companyName || res.data.name || '',
-            industry: res.data.industry || '',
-            businessEmail: res.data.businessEmail || '',
-            contactPhone: res.data.contactPhone || '',
-            website: res.data.website || ''
-          });
-          if (onCompanyUpdated) {
-            onCompanyUpdated(res.data);
+    if (!initialCompany) {
+      getMyCompany()
+        .then((res) => {
+          if (isMounted && res && res.success && res.data) {
+            setCompany(res.data);
+            setFormData({
+              companyName: res.data.companyName || res.data.name || '',
+              industry: res.data.industry || '',
+              businessEmail: res.data.businessEmail || '',
+              contactPhone: res.data.contactPhone || '',
+              website: res.data.website || ''
+            });
+            if (onCompanyUpdated) {
+              onCompanyUpdated(res.data);
+            }
           }
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      });
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        });
+    } else {
+      setIsLoading(false);
+    }
     return () => {
       isMounted = false;
     };
-  }, [onCompanyUpdated]);
+  }, []);
 
   if (isLoading && !company) {
     return (

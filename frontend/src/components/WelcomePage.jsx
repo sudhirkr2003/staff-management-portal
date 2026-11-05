@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   User, Mail, Settings, CheckCircle2, AlertCircle,
   Loader2, X, Users, Lock, ArrowLeft,
@@ -126,6 +126,13 @@ const WelcomePage = ({
         .catch(() => {});
     }
   }, [initialCompany]);
+
+  const handleCompanyUpdated = useCallback((updatedCompany) => {
+    setCompany(updatedCompany);
+    if (onCompanyUpdate) {
+      onCompanyUpdate(updatedCompany);
+    }
+  }, [onCompanyUpdate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1328,12 +1335,7 @@ const WelcomePage = ({
           company={company}
           currentUser={user}
           onClose={handleCloseManageCompany}
-          onCompanyUpdated={(updatedCompany) => {
-            setCompany(updatedCompany);
-            if (onCompanyUpdate) {
-              onCompanyUpdate(updatedCompany);
-            }
-          }}
+          onCompanyUpdated={handleCompanyUpdated}
         />
       )}
 
