@@ -16,3 +16,5 @@ application-dev.properties
 *.local.properties
 application-secret.properties
 Thumbs.db
+*.zip
+Staff_Management_Portal/
